@@ -1,0 +1,7 @@
+{
+  "name": "TechTales Labs",
+  "description": "An elite digital identity and cybersecurity intelligence platform for the next generation of digital thinkers.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
