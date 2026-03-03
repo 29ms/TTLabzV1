@@ -105,6 +105,27 @@ const Dashboard: React.FC<DashboardProps> = ({
             <button onClick={() => setShowPractice(true)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Practice</button>
             <button onClick={() => setView(AppView.RESEARCH)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Advanced</button>
           </div>
+
+          <nav className="flex bg-zinc-950 border border-zinc-900 p-1 rounded-md w-fit">
+            {[
+              { id: DashboardSubView.INTEL_HUB, label: 'Labs' },
+              { id: DashboardSubView.VIRTUAL_SOC, label: 'Cybersecurity Practice' },
+              { id: DashboardSubView.NEURAL_OPS, label: 'Advanced Builder' },
+            ].map((view) => (
+              <button
+                key={view.id}
+                onClick={() => setSubView(view.id)}
+                className={`px-4 py-2 text-[15px] font-medium rounded transition-all ${
+                  subView === view.id ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-100'
+                }`}
+              >
+                {view.label}
+                {view.id === DashboardSubView.NEURAL_OPS && !metrics.isPremium && (
+                  <span className="ml-2 text-[10px] text-zinc-500">Locked</span>
+                )}
+              </button>
+            ))}
+          </nav>
         </div>
 
         <div className="flex flex-wrap gap-6 text-[15px] text-zinc-400">

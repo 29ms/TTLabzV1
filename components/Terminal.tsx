@@ -20,6 +20,7 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
     onComplete();
   };
 
+const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans">
       <header className="border-b border-zinc-800/80 bg-black/95 backdrop-blur-sm">
