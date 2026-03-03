@@ -6,34 +6,13 @@ interface TerminalProps {
 }
 
 const tracks: { title: string; track: LabTrack; description: string }[] = [
-  {
-    title: 'Build AI Project',
-    track: 'ETHICS',
-    description: 'Design, test, and present an AI-focused portfolio project.',
-  },
-  {
-    title: 'Build Cybersecurity Project',
-    track: 'DEFENDER',
-    description: 'Investigate real scenarios and produce structured security outputs.',
-  },
-  {
-    title: 'Build Coding Project',
-    track: 'EXECUTIVE',
-    description: 'Build practical software with planning, implementation, and testing evidence.',
-  },
-  {
-    title: 'Build Advanced Project',
-    track: 'INTEL',
-    description: 'Complete deeper investigations and publish advanced portfolio artifacts.',
-  },
+  { title: 'Build AI Project', track: 'ETHICS', description: 'Design, test, and present an AI-focused portfolio project.' },
+  { title: 'Build Cybersecurity Project', track: 'DEFENDER', description: 'Investigate real scenarios and produce structured security outputs.' },
+  { title: 'Build Coding Project', track: 'EXECUTIVE', description: 'Build practical software with planning, implementation, and testing evidence.' },
+  { title: 'Build Advanced Project', track: 'INTEL', description: 'Complete deeper investigations and publish advanced portfolio artifacts.' },
 ];
 
-const steps = [
-  'Choose Track',
-  'Complete Structured Lab',
-  'Generate Portfolio Output',
-  'Add to Portfolio',
-];
+const steps = ['Choose Track', 'Complete Structured Lab', 'Generate Portfolio Output', 'Add to Portfolio'];
 
 const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
   const handleStart = (track: LabTrack) => {
@@ -56,7 +35,7 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-12 md:px-8 md:py-16 space-y-16">
+      <main className="mx-auto max-w-6xl px-6 py-12 md:px-8 md:py-16 space-y-14">
         <section className="space-y-6">
           <h1 className="text-[34px] font-semibold leading-tight text-white max-w-2xl">
             Build Serious Tech Projects Before Graduation.
@@ -64,27 +43,52 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
           <p className="text-[15px] leading-7 text-zinc-300 max-w-3xl">
             Create structured AI, cybersecurity, and coding projects that strengthen your portfolio.
           </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            {tracks.map((track) => (
-              <button
-                key={track.title}
-                onClick={() => handleStart(track.track)}
-                className="text-left rounded-2xl border border-zinc-800 bg-zinc-950 p-6 hover:bg-zinc-900 transition-all duration-200 ease-out"
-              >
-                <h2 className="text-[20px] font-semibold text-white">{track.title}</h2>
-                <p className="mt-3 text-[15px] text-zinc-300 leading-7">{track.description}</p>
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => onComplete()}
+              className="h-11 rounded-lg px-6 text-[15px] font-semibold bg-white text-black hover:bg-zinc-200 transition-colors duration-200 ease-out"
+            >
+              Start Building
+            </button>
+            <a
+              href="#tracks"
+              className="h-11 inline-flex items-center rounded-lg px-6 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
+            >
+              View Tracks
+            </a>
+          </div>
+        </section>
+
+        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-[15px] text-zinc-500">Projects Built</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">120+</p>
+            </div>
+            <div>
+              <p className="text-[15px] text-zinc-500">Portfolio Outputs</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">300+</p>
+            </div>
+            <div>
+              <p className="text-[15px] text-zinc-500">Tracks Available</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">4</p>
+            </div>
           </div>
         </section>
 
         <section id="tracks" className="space-y-6">
-          <h2 className="text-[26px] font-semibold text-white">Project Tracks</h2>
+          <h2 className="text-[26px] font-semibold text-white">Build by Track</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {tracks.map((track) => (
-              <article key={track.track} className="rounded-xl border border-zinc-800 bg-zinc-950 p-6">
+              <article key={track.track} className="rounded-xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
                 <h3 className="text-[20px] font-semibold text-white">{track.title.replace('Build ', '')}</h3>
-                <p className="mt-3 text-[15px] leading-7 text-zinc-300">{track.description}</p>
+                <p className="text-[15px] leading-7 text-zinc-300">{track.description}</p>
+                <button
+                  onClick={() => handleStart(track.track)}
+                  className="h-10 rounded-lg px-4 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
+                >
+                  Start
+                </button>
               </article>
             ))}
           </div>
