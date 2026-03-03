@@ -1,181 +1,119 @@
-import React from "react";
+import React from 'react';
+import { LabTrack } from '../types';
 
 interface TerminalProps {
   onComplete: () => void;
 }
 
-const baseButtonClasses =
-  "h-11 rounded-lg px-6 text-[15px] font-semibold transition-colors duration-200";
-
-const trackCards = [
-  {
-    name: "AI Projects",
-    focus: "Model Thinking",
-    description:
-      "Design and evaluate AI workflows with clear prompts, model choices, and measured outcomes.",
-  },
-  {
-    name: "Cybersecurity Projects",
-    focus: "Risk Analysis",
-    description:
-      "Investigate security scenarios, document findings, and recommend practical protections.",
-  },
-  {
-    name: "Coding Projects",
-    focus: "Build + Test",
-    description:
-      "Ship practical features with planning notes, implementation evidence, and testing logs.",
-  },
-  {
-    name: "Advanced Projects",
-    focus: "Research Builder",
-    description:
-      "Use advanced project tools for deeper research, synthesis, and technical reflection.",
-  },
+const tracks: { title: string; track: LabTrack; description: string }[] = [
+  { title: 'Build AI Project', track: 'ETHICS', description: 'Design, test, and present an AI-focused portfolio project.' },
+  { title: 'Build Cybersecurity Project', track: 'DEFENDER', description: 'Investigate real scenarios and produce structured security outputs.' },
+  { title: 'Build Coding Project', track: 'EXECUTIVE', description: 'Build practical software with planning, implementation, and testing evidence.' },
+  { title: 'Build Advanced Project', track: 'INTEL', description: 'Complete deeper investigations and publish advanced portfolio artifacts.' },
 ];
 
-const workflowSteps = [
-  {
-    title: "Choose Track",
-    detail: "Select one project track based on your goals.",
-  },
-  {
-    title: "Complete Labs",
-    detail: "Finish guided labs that produce reusable project evidence.",
-  },
-  {
-    title: "Build Final Project",
-    detail: "Assemble your evidence into one structured technical project.",
-  },
-  {
-    title: "Publish Portfolio Entry",
-    detail: "Present your methods, output quality, and reflection.",
-  },
-];
+const steps = ['Choose Track', 'Complete Structured Lab', 'Generate Portfolio Output', 'Add to Portfolio'];
 
-const qualityRubric = [
-  {
-    phase: "Concept",
-    prompt: "What did you learn and why does it matter?",
-  },
-  {
-    phase: "Application",
-    prompt: "How did you apply it in a real task?",
-  },
-  {
-    phase: "Output",
-    prompt: "What concrete artifact did you produce?",
-  },
-  {
-    phase: "Reflection",
-    prompt: "What tradeoffs did you notice and improve?",
-  },
-];
-
-const inAppPreview = [
-  "Labs Dashboard: choose pathway filters and open active labs.",
-  "Mission View: respond to prompts and receive mentor feedback.",
-  "Portfolio View: review certificates and structured project outputs.",
-  "Advanced Projects: complete deeper research-driven builds.",
-];
+const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
+  const handleStart = (track: LabTrack) => {
+    localStorage.setItem('preferredTrack', track);
+    onComplete();
+  };
 
 const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans">
-      <header className="border-b border-zinc-800 bg-zinc-950/95">
+    <div className="min-h-screen bg-black text-zinc-100 font-sans">
+      <header className="border-b border-zinc-800/80 bg-black/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 md:px-8">
           <div>
-            <p className="text-[15px] font-semibold text-white">TechTales Labs</p>
-            <p className="text-[15px] text-zinc-400">Structured project learning for high school students</p>
+            <p className="text-[20px] font-semibold text-white">TechTales Labs</p>
+            <p className="text-[15px] text-zinc-500">Structured portfolio project platform</p>
           </div>
-          <nav className="hidden gap-6 text-[15px] text-zinc-300 md:flex">
-            <a href="#tracks" className="hover:text-white">Tracks</a>
-            <a href="#workflow" className="hover:text-white">Workflow</a>
-            <a href="#quality" className="hover:text-white">Quality Standard</a>
-            <a href="#inside" className="hover:text-white">In-App Preview</a>
+          <nav className="hidden md:flex items-center gap-8 text-[15px] text-zinc-400">
+            <a href="#tracks" className="hover:text-white transition-colors duration-200 ease-out">Tracks</a>
+            <a href="#how-it-works" className="hover:text-white transition-colors duration-200 ease-out">How It Works</a>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-12 md:px-8 md:py-16">
-        <section className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 md:p-10">
-          <h1 className="text-[34px] font-semibold leading-tight text-white">
+      <main className="mx-auto max-w-6xl px-6 py-12 md:px-8 md:py-16 space-y-14">
+        <section className="space-y-6">
+          <h1 className="text-[34px] font-semibold leading-tight text-white max-w-2xl">
             Build Serious Tech Projects Before Graduation.
           </h1>
-          <p className="max-w-3xl text-[15px] leading-7 text-zinc-300">
-            Learn AI, cybersecurity, and coding by building structured portfolio projects.
-            This platform is built for depth: guided labs, clear frameworks, and strong final outputs.
+          <p className="text-[15px] leading-7 text-zinc-300 max-w-3xl">
+            Create structured AI, cybersecurity, and coding projects that strengthen your portfolio.
           </p>
-          <div className="flex flex-wrap gap-4 pt-2">
-            <button onClick={onComplete} className={`${baseButtonClasses} bg-white text-zinc-950 hover:bg-zinc-200`}>
-              Start Project Journey
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => onComplete()}
+              className="h-11 rounded-lg px-6 text-[15px] font-semibold bg-white text-black hover:bg-zinc-200 transition-colors duration-200 ease-out"
+            >
+              Start Building
             </button>
             <a
-              href="#inside"
-              className={`${baseButtonClasses} inline-flex items-center border border-zinc-700 text-zinc-100 hover:border-zinc-500 hover:text-white`}
+              href="#tracks"
+              className="h-11 inline-flex items-center rounded-lg px-6 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
             >
-              See In-App Preview
+              View Tracks
             </a>
           </div>
         </section>
 
+        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-[15px] text-zinc-500">Projects Built</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">120+</p>
+            </div>
+            <div>
+              <p className="text-[15px] text-zinc-500">Portfolio Outputs</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">300+</p>
+            </div>
+            <div>
+              <p className="text-[15px] text-zinc-500">Tracks Available</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">4</p>
+            </div>
+          </div>
+        </section>
+
         <section id="tracks" className="space-y-6">
-          <h2 className="text-[26px] font-semibold text-white">Project Tracks</h2>
+          <h2 className="text-[26px] font-semibold text-white">Build by Track</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {trackCards.map((track) => (
-              <article key={track.name} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
-                <p className="text-[15px] font-medium text-zinc-400">{track.focus}</p>
-                <h3 className="mt-2 text-[20px] font-semibold text-white">{track.name}</h3>
-                <p className="mt-3 text-[15px] leading-7 text-zinc-300">{track.description}</p>
+            {tracks.map((track) => (
+              <article key={track.track} className="rounded-xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
+                <h3 className="text-[20px] font-semibold text-white">{track.title.replace('Build ', '')}</h3>
+                <p className="text-[15px] leading-7 text-zinc-300">{track.description}</p>
+                <button
+                  onClick={() => handleStart(track.track)}
+                  className="h-10 rounded-lg px-4 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
+                >
+                  Start
+                </button>
               </article>
             ))}
           </div>
         </section>
 
-        <section id="workflow" className="space-y-6">
+        <section id="how-it-works" className="space-y-6">
           <h2 className="text-[26px] font-semibold text-white">How It Works</h2>
-          <ol className="grid gap-4 md:grid-cols-2">
-            {workflowSteps.map((step, index) => (
-              <li key={step.title} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
-                <p className="text-[15px] font-medium text-zinc-400">Step {index + 1}</p>
-                <h3 className="mt-2 text-[20px] font-semibold text-white">{step.title}</h3>
-                <p className="mt-3 text-[15px] text-zinc-300">{step.detail}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section id="quality" className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-8">
-          <h2 className="text-[26px] font-semibold text-white">Lab Quality Standard</h2>
-          <p className="text-[15px] leading-7 text-zinc-300">
-            Every lab is graded against the same four-part rubric so students build depth consistently.
-          </p>
-          <div className="grid gap-3 md:grid-cols-2">
-            {qualityRubric.map((item) => (
-              <div key={item.phase} className="rounded-lg border border-zinc-800 bg-zinc-950/70 px-4 py-4">
-                <h3 className="text-[20px] font-semibold text-white">{item.phase}</h3>
-                <p className="mt-2 text-[15px] text-zinc-300">{item.prompt}</p>
-              </div>
-            ))}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-6 md:p-8">
+            <ol className="grid gap-4 md:grid-cols-4">
+              {steps.map((step, i) => (
+                <li key={step} className="rounded-lg border border-zinc-800 bg-black px-4 py-4">
+                  <p className="text-[15px] text-zinc-500">Step {i + 1}</p>
+                  <p className="mt-2 text-[20px] font-semibold text-white">{step}</p>
+                </li>
+              ))}
+            </ol>
           </div>
-        </section>
-
-        <section id="inside" className="space-y-6">
-          <h2 className="text-[26px] font-semibold text-white">What You See After Clicking Start</h2>
-          <ul className="space-y-3">
-            {inAppPreview.map((item) => (
-              <li key={item} className="rounded-xl border border-zinc-800 bg-zinc-900/40 px-6 py-4 text-[15px] text-zinc-300">
-                {item}
-              </li>
-            ))}
-          </ul>
         </section>
       </main>
 
-      <footer className="border-t border-zinc-800">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-[15px] text-zinc-400 md:px-8">
+      <footer className="border-t border-zinc-800/80">
+        <div className="mx-auto max-w-6xl px-6 py-6 md:px-8 flex flex-wrap items-center justify-between gap-4 text-[15px] text-zinc-400">
           <p>© 2026 TechTales Labs</p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3">
             <a href="/privacy.html" target="_blank" rel="noreferrer" className="hover:text-white">Privacy Policy</a>
             <span>•</span>
             <a href="/terms.html" target="_blank" rel="noreferrer" className="hover:text-white">Terms of Service</a>
