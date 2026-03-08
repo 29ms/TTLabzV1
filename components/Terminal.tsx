@@ -124,7 +124,6 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
       </footer>
     </div>
   );
-};
-};
+}
 
 export default Terminal;
