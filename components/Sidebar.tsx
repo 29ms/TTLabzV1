@@ -11,10 +11,10 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCollapsed, setIsCollapsed, onLogout }) => {
-  const primaryItems = [
-    { label: 'Start Here', view: AppView.DASHBOARD, icon: '◈' },
+  const menuItems = [
+    { label: 'Dashboard', view: AppView.DASHBOARD, icon: '◈' },
     { label: 'Portfolio', view: AppView.PORTFOLIO, icon: '▣' },
-    { label: 'Progress', view: AppView.LEARN, icon: '⚯' },
+    { label: 'Learning Library', view: AppView.LEARN, icon: '⚯' },
   ];
 
   return (
@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
         {!isCollapsed && (
           <div>
             <h1 className="text-[20px] font-semibold text-zinc-100">TechTales Labs</h1>
-            <p className="text-[15px] text-zinc-500">Guided Portfolio Builder</p>
+            <p className="text-[15px] text-zinc-500">Project Workspace</p>
           </div>
         )}
         <button
@@ -36,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
       </div>
 
       <nav className="px-3 space-y-1">
-        {primaryItems.map((item) => (
+        {menuItems.map((item) => (
           <button
             key={item.label}
             onClick={() => setView(item.view)}
@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
       <div className="px-3 space-y-1">
         <button
           onClick={() => isPremium ? setView(AppView.LAB_CREATOR) : setView(AppView.UPGRADE)}
-          title={isCollapsed ? 'Build Projects' : ''}
+          title={isCollapsed ? 'Project Builder' : ''}
           className={`w-full flex items-center gap-3 rounded-lg transition-all duration-200 ease-out ${
             currentView === AppView.LAB_CREATOR
               ? 'bg-zinc-800 text-white'
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
           <span className="text-xl">✢</span>
           {!isCollapsed && (
             <div className="flex-1 flex items-center justify-between">
-              <span className="text-[15px] font-medium">Build Projects</span>
+              <span className="text-[15px] font-medium">Project Builder</span>
               {!isPremium && <span className="text-[10px] border border-zinc-600 text-zinc-500 px-1">PRO</span>}
             </div>
           )}
@@ -76,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
 
         <button
           onClick={() => isPremium ? setView(AppView.RESEARCH) : setView(AppView.UPGRADE)}
-          title={isCollapsed ? 'Research Suite' : ''}
+          title={isCollapsed ? 'Advanced Projects' : ''}
           className={`w-full flex items-center gap-3 rounded-lg transition-all duration-200 ease-out ${
             currentView === AppView.RESEARCH
               ? 'bg-zinc-800 text-white'
@@ -86,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
           <span className="text-xl">⌬</span>
           {!isCollapsed && (
             <div className="flex-1 flex items-center justify-between">
-              <span className="text-[15px] font-medium">Research Suite</span>
+              <span className="text-[15px] font-medium">Advanced Projects</span>
               {!isPremium && <span className="text-[10px] border border-zinc-600 text-zinc-500 px-1">PRO</span>}
             </div>
           )}

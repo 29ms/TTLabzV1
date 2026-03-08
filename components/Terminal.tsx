@@ -20,6 +20,7 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
     onComplete();
   };
 
+const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans">
       <header className="border-b border-zinc-800/80 bg-black/95 backdrop-blur-sm">
@@ -59,6 +60,22 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
           </div>
         </section>
 
+        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-[15px] text-zinc-500">Projects Built</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">120+</p>
+            </div>
+            <div>
+              <p className="text-[15px] text-zinc-500">Portfolio Outputs</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">300+</p>
+            </div>
+            <div>
+              <p className="text-[15px] text-zinc-500">Tracks Available</p>
+              <p className="mt-2 text-[26px] font-semibold text-white">4</p>
+            </div>
+          </div>
+        </section>
 
         <section id="tracks" className="space-y-6">
           <h2 className="text-[26px] font-semibold text-white">Build by Track</h2>
@@ -107,6 +124,7 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
       </footer>
     </div>
   );
+};
 };
 
 export default Terminal;

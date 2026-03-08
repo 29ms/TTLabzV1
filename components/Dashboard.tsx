@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserMetrics, Mission, AppView, LabTrack } from '../types';
 import VirtualSOC from './VirtualSOC';
 
@@ -24,11 +24,11 @@ const trackLabels: Record<LabTrack, string> = {
   AI_ENGINEERING: 'AI Projects',
 };
 
-const pathCards: { id: LabTrack; title: string; why: string }[] = [
-  { id: 'ETHICS', title: 'AI Project Path', why: 'Understand model decisions and produce evidence-based AI analysis.' },
-  { id: 'DEFENDER', title: 'Cybersecurity Project Path', why: 'Investigate real threats and document practical security responses.' },
-  { id: 'EXECUTIVE', title: 'Coding Project Path', why: 'Build working tools and explain your technical implementation process.' },
-  { id: 'INTEL', title: 'Advanced Research Path', why: 'Develop deeper investigations for advanced portfolio submissions.' },
+const starterTracks: { id: LabTrack; title: string; summary: string }[] = [
+  { id: 'ETHICS', title: 'AI Projects', summary: 'Build and evaluate model-driven projects with structured evidence.' },
+  { id: 'DEFENDER', title: 'Cybersecurity Projects', summary: 'Investigate incidents and produce clear security recommendations.' },
+  { id: 'EXECUTIVE', title: 'Coding Projects', summary: 'Create practical software outcomes with test-backed implementation.' },
+  { id: 'INTEL', title: 'Advanced Projects', summary: 'Run deeper investigations and publish advanced portfolio artifacts.' },
 ];
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -42,37 +42,39 @@ const Dashboard: React.FC<DashboardProps> = ({
   onUpdatePoints,
 }) => {
   const [selectedTrack, setSelectedTrack] = useState<LabTrack | 'ALL'>(metrics.activePathway || 'ALL');
+  const [showLabs, setShowLabs] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(3);
   const [showPractice, setShowPractice] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(4);
 
   useEffect(() => {
     const preferredTrack = localStorage.getItem('preferredTrack') as LabTrack | null;
     if (preferredTrack) {
       setSelectedTrack(preferredTrack);
+      setShowLabs(true);
       localStorage.removeItem('preferredTrack');
       return;
     }
-    if (metrics.activePathway) setSelectedTrack(metrics.activePathway);
+
+    if (metrics.activePathway) {
+      setSelectedTrack(metrics.activePathway);
+      setShowLabs(true);
+    }
   }, [metrics.activePathway]);
 
-  const filteredMissions = useMemo(
-    () => (selectedTrack === 'ALL' ? missions : missions.filter((m) => m.track === selectedTrack)),
-    [missions, selectedTrack],
-  );
+  const filteredMissions = selectedTrack === 'ALL'
+    ? missions
+    : missions.filter((m) => m.track === selectedTrack);
 
-  const nextLab = useMemo(
-    () => filteredMissions.find((m) => !m.completed) || filteredMissions[0] || null,
-    [filteredMissions],
-  );
+  const recommendedLabs = filteredMissions.filter((m) => !m.completed);
+  const visibleLabs = (recommendedLabs.length ? recommendedLabs : filteredMissions).slice(0, visibleCount);
+  const nextLab = (recommendedLabs.length ? recommendedLabs : filteredMissions).find((m) => !m.completed) || null;
 
-  const recommended = useMemo(() => {
-    const pending = filteredMissions.filter((m) => !m.completed);
-    return (pending.length ? pending : filteredMissions).slice(0, visibleCount);
-  }, [filteredMissions, visibleCount]);
-
-  const total = filteredMissions.length || 1;
-  const done = filteredMissions.filter((m) => m.completed).length;
-  const progress = Math.round((done / total) * 100);
+  const handleChooseTrack = (track: LabTrack) => {
+    setSelectedTrack(track);
+    setShowLabs(true);
+    setShowPractice(false);
+    setVisibleCount(3);
+  };
 
   if (showPractice) {
     return (
@@ -80,7 +82,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <header className="mb-6 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-[34px] font-semibold text-white">Cybersecurity Practice</h1>
-            <p className="text-[15px] text-zinc-400 mt-2">Scenario practice with fast feedback and scoring.</p>
+            <p className="text-[15px] text-zinc-400 mt-2">Focused simulations to sharpen analysis and incident response thinking.</p>
           </div>
           <button onClick={() => setShowPractice(false)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Back</button>
         </header>
@@ -93,145 +95,109 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="p-8 md:p-12 pb-24 h-screen flex flex-col overflow-hidden">
-      <header className="mb-8 border-b border-zinc-900 pb-6 space-y-5 shrink-0">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <header className="mb-8 border-b border-zinc-900 pb-6 flex flex-col gap-5 shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-[34px] font-semibold text-white">Continue Your Portfolio Project</h1>
-            <p className="text-[15px] text-zinc-400 mt-2">
-              You are not completing random labs. You are building structured project evidence.
-            </p>
+            <h1 className="text-[34px] font-semibold text-white">Project Dashboard</h1>
+            <p className="text-[15px] text-zinc-400 mt-2">Build, start labs, add outputs, and export from portfolio.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => (nextLab ? onSelectMission(nextLab.id) : null)}
-              className="h-11 rounded-lg px-5 text-[15px] font-semibold bg-white text-black hover:bg-zinc-200 transition-colors duration-200 ease-out"
-            >
-              {nextLab ? 'Continue Project' : 'Start'}
-            </button>
-            <button
-              onClick={() => setView(AppView.PORTFOLIO)}
-              className="h-11 rounded-lg px-5 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
-            >
-              Add to Portfolio
-            </button>
+            <button onClick={() => setShowPractice(true)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Practice</button>
+            <button onClick={() => setView(AppView.RESEARCH)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Advanced</button>
           </div>
+
+          <nav className="flex bg-zinc-950 border border-zinc-900 p-1 rounded-md w-fit">
+            {[
+              { id: DashboardSubView.INTEL_HUB, label: 'Labs' },
+              { id: DashboardSubView.VIRTUAL_SOC, label: 'Cybersecurity Practice' },
+              { id: DashboardSubView.NEURAL_OPS, label: 'Advanced Builder' },
+            ].map((view) => (
+              <button
+                key={view.id}
+                onClick={() => setSubView(view.id)}
+                className={`px-4 py-2 text-[15px] font-medium rounded transition-all ${
+                  subView === view.id ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-100'
+                }`}
+              >
+                {view.label}
+                {view.id === DashboardSubView.NEURAL_OPS && !metrics.isPremium && (
+                  <span className="ml-2 text-[10px] text-zinc-500">Locked</span>
+                )}
+              </button>
+            ))}
+          </nav>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <p className="text-[15px] text-zinc-500">Current Progress</p>
-            <p className="mt-1 text-[26px] font-semibold text-white">{progress}%</p>
-          </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <p className="text-[15px] text-zinc-500">Labs Completed</p>
-            <p className="mt-1 text-[26px] font-semibold text-white">{metrics.labsCompleted}</p>
-          </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            <p className="text-[15px] text-zinc-500">Why It Matters</p>
-            <p className="mt-1 text-[15px] text-zinc-300">Your outputs become portfolio proof for internships and applications.</p>
-          </div>
+        <div className="flex flex-wrap gap-6 text-[15px] text-zinc-400">
+          <span>{metrics.labsCompleted} Labs</span>
+          <span>{metrics.points.toLocaleString()} Points</span>
+          <button onClick={snowToggle} className="hover:text-zinc-200 transition-colors duration-200 ease-out">{isSnowing ? 'Disable Snow' : 'Enable Snow'}</button>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pb-20 space-y-6">
-        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => {
-                  setSelectedTrack('ALL');
-                  onClearPathway();
-                  setVisibleCount(4);
-                }}
-                className={`h-9 rounded-lg px-3 text-[15px] transition-all duration-200 ease-out ${selectedTrack === 'ALL' ? 'bg-white text-black' : 'border border-zinc-700 text-zinc-300 hover:border-zinc-500'}`}
-              >
-                All Paths
-              </button>
-              {pathCards.map((path) => (
-                <button
-                  key={path.id}
-                  onClick={() => {
-                    setSelectedTrack(path.id);
-                    setVisibleCount(4);
-                  }}
-                  className={`h-9 rounded-lg px-3 text-[15px] transition-all duration-200 ease-out ${selectedTrack === path.id ? 'bg-white text-black' : 'border border-zinc-700 text-zinc-300 hover:border-zinc-500'}`}
-                >
-                  {path.title.replace(' Path', '')}
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-24">
+        {!showLabs ? (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8 md:p-10 space-y-6">
+            <div>
+              <h2 className="text-[26px] font-semibold text-white">Start Here</h2>
+              <p className="mt-3 text-[15px] text-zinc-300 max-w-3xl">Choose a track, complete structured labs, and add outputs to your portfolio.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {starterTracks.map((track) => (
+                <button key={track.id} onClick={() => handleChooseTrack(track.id)} className="text-left rounded-xl border border-zinc-800 bg-black p-6 hover:bg-zinc-900/70 transition-all duration-200 ease-out">
+                  <h3 className="text-[20px] font-semibold text-white">{track.title}</h3>
+                  <p className="mt-3 text-[15px] text-zinc-300">{track.summary}</p>
                 </button>
               ))}
             </div>
-            <button onClick={snowToggle} className="text-[15px] text-zinc-400 hover:text-zinc-200 transition-colors duration-200 ease-out">
-              {isSnowing ? 'Disable Snow' : 'Enable Snow'}
-            </button>
-          </div>
-        </section>
+          </section>
+        ) : (
+          <>
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 md:p-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+              <div>
+                <h2 className="text-[26px] font-semibold text-white">{selectedTrack === 'ALL' ? 'All Tracks' : trackLabels[selectedTrack]}</h2>
+                <p className="mt-2 text-[15px] text-zinc-400">Each lab includes concept, application, output, and reflection.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => { setSelectedTrack('ALL'); onClearPathway(); setVisibleCount(3); }} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">View All</button>
+                <button onClick={() => setShowLabs(false)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Change Track</button>
+              </div>
+            </section>
 
-        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-6">
-          <h2 className="text-[26px] font-semibold text-white">Project Paths</h2>
-          <p className="mt-2 text-[15px] text-zinc-400">Choose a path based on what you want to prove in your portfolio.</p>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {pathCards.map((path) => (
-              <button
-                key={path.id}
-                onClick={() => setSelectedTrack(path.id)}
-                className="text-left rounded-xl border border-zinc-800 bg-black p-5 hover:bg-zinc-900/70 transition-colors duration-200 ease-out"
-              >
-                <h3 className="text-[20px] font-semibold text-white">{path.title}</h3>
-                <p className="mt-2 text-[15px] text-zinc-300">{path.why}</p>
-              </button>
-            ))}
-          </div>
-        </section>
+            <section className="mt-6">
+              <h3 className="text-[20px] font-semibold text-white mb-4">Recommended Next Labs</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
+                {visibleLabs.map((mission) => (
+                  <button key={mission.id} onClick={() => onSelectMission(mission.id)} className={`text-left rounded-xl border border-zinc-800 bg-zinc-950 p-6 hover:bg-zinc-900 transition-all duration-200 ease-out min-h-[260px] flex flex-col justify-between ${mission.completed ? 'opacity-50' : ''}`}>
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[15px] text-zinc-500">{trackLabels[mission.track] || mission.track}</p>
+                        {mission.completed && <span className="text-[12px] rounded-full border border-emerald-700/70 bg-emerald-900/20 px-2 py-1 text-emerald-300">Output Ready</span>}
+                      </div>
+                      <h4 className="mt-2 text-[20px] font-semibold text-white">{mission.title}</h4>
+                      <p className="mt-3 text-[15px] text-zinc-400 line-clamp-2">{mission.description}</p>
+                      <ul className="mt-4 space-y-1 text-[15px] text-zinc-500">
+                        <li>• Concept</li><li>• Application</li><li>• Structured Output + Reflection</li>
+                      </ul>
+                    </div>
+                    <p className="mt-4 text-[15px] text-zinc-300">{mission.completed ? 'Add to Portfolio' : 'Start Lab →'}</p>
+                  </button>
+                ))}
+              </div>
 
-        <section>
-          <h2 className="text-[26px] font-semibold text-white mb-4">
-            {selectedTrack === 'ALL' ? 'Recommended Project Labs' : `Recommended · ${trackLabels[selectedTrack]}`}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {recommended.map((mission) => (
-              <button
-                key={mission.id}
-                onClick={() => onSelectMission(mission.id)}
-                className={`text-left rounded-xl border border-zinc-800 bg-zinc-950 p-6 hover:bg-zinc-900 transition-all duration-200 ease-out min-h-[260px] flex flex-col justify-between ${mission.completed ? 'opacity-60' : ''}`}
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[15px] text-zinc-500">{trackLabels[mission.track] || mission.track}</p>
-                    {mission.completed && <span className="text-[12px] rounded-full border border-emerald-700/70 bg-emerald-900/20 px-2 py-1 text-emerald-300">Output Ready</span>}
-                  </div>
-                  <h3 className="mt-2 text-[20px] font-semibold text-white">{mission.title}</h3>
-                  <p className="mt-3 text-[15px] text-zinc-400 line-clamp-2">{mission.description}</p>
-                  <ul className="mt-4 space-y-1 text-[15px] text-zinc-500">
-                    <li>• Concept</li>
-                    <li>• Investigation + Application</li>
-                    <li>• Structured Output + Reflection</li>
-                  </ul>
-                </div>
-                <p className="mt-4 text-[15px] text-zinc-300">{mission.completed ? 'Add to Portfolio' : 'Start Lab →'}</p>
-              </button>
-            ))}
-          </div>
-
-          {recommended.length < filteredMissions.length && (
-            <button onClick={() => setVisibleCount((prev) => prev + 4)} className="mt-5 h-10 rounded-lg px-5 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Show More</button>
-          )}
-        </section>
-
-        <section className="rounded-xl border border-zinc-800 bg-zinc-950 p-6">
-          <h2 className="text-[26px] font-semibold text-white">Advanced Work</h2>
-          <p className="mt-2 text-[15px] text-zinc-400">Use deeper tools when you are ready to build long-form research artifacts.</p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button onClick={() => setShowPractice(true)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Practice</button>
-            <button onClick={() => setView(AppView.RESEARCH)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out">Open Research Suite</button>
-          </div>
-        </section>
+              {visibleLabs.length < (recommendedLabs.length ? recommendedLabs.length : filteredMissions.length) && (
+                <button onClick={() => setVisibleCount((prev) => prev + 3)} className="h-10 rounded-lg px-5 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Show More Labs</button>
+              )}
+            </section>
+          </>
+        )}
       </div>
 
       <div className="sticky bottom-0 z-20 border-t border-zinc-800 bg-black/95 backdrop-blur p-4 md:p-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[15px] text-zinc-400">{nextLab ? `Next Step: ${nextLab.title}` : 'All current labs complete. Add your output to portfolio.'}</p>
+        <p className="text-[15px] text-zinc-400">{nextLab ? `Next: ${nextLab.title}` : 'All recommended labs completed. Add outputs to portfolio.'}</p>
         <div className="flex gap-3">
           <button
-            onClick={() => (nextLab ? onSelectMission(nextLab.id) : setView(AppView.DASHBOARD))}
+            onClick={() => nextLab ? onSelectMission(nextLab.id) : setView(AppView.DASHBOARD)}
             className="h-10 rounded-lg px-4 text-[15px] font-semibold bg-white text-black hover:bg-zinc-200 transition-colors duration-200 ease-out"
           >
             Continue Project
