@@ -8,112 +8,103 @@ const UpgradeView: React.FC<UpgradeViewProps> = ({ onUpgrade }) => {
   const [billing, setBilling] = useState<'MONTHLY' | 'ANNUAL'>('ANNUAL');
 
   const features = [
-    { name: 'Mission Access', free: 'Foundational Only', pro: 'All 100+ Advanced Labs' },
-    { name: 'Speed Labs', free: 'Limited (25)', pro: 'Infinite Simulations' },
-    { name: 'Certifications', free: 'None', pro: '10 Track Certifications' },
-    { name: 'Lab Creator', free: 'Locked', pro: 'Create, Share, Deploy' },
-    { name: 'Leaderboard', free: 'Public', pro: 'Priority Verified Ranking' },
+    { name: 'Path Access', free: 'Core paths only', pro: 'Core + advanced paths' },
+    { name: 'Guided Project Steps', free: 'Foundations and builder levels', pro: 'Full depth across all levels' },
+    { name: 'Portfolio Storage', free: 'Starter portfolio history', pro: 'Extended portfolio archive' },
+    { name: 'Certificates', free: 'Limited certificate track', pro: 'Full certificate set' },
+    { name: 'Research Suite', free: 'Preview access', pro: 'Full advanced research workflows' },
+    { name: 'Project Builder Tools', free: 'Basic tools', pro: 'Expanded build and export tools' },
   ];
 
   return (
-    <div className="p-12 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header className="mb-16 text-center">
-        <h1 className="text-4xl font-light mb-4 uppercase tracking-tighter">Professional Track</h1>
-        <p className="text-zinc-500 max-w-lg mx-auto leading-relaxed text-sm font-light">
-          Unlock the full curriculum of the TechTales Labs program and begin earning professional certifications.
+    <div className="mx-auto max-w-6xl p-8 md:p-12 animate-in fade-in duration-300">
+      <header className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+        <p className="text-sm text-[#9CA3AF]">Upgrade</p>
+        <h1 className="mt-2 text-3xl font-semibold text-[#F9FAFB]">Go from solid portfolio to standout portfolio.</h1>
+        <p className="mt-3 max-w-3xl text-sm text-[#9CA3AF]">
+          The free plan stays useful for real progress. Pro unlocks deeper projects, stronger outputs, and advanced research quality.
         </p>
+
+        <div className="mt-5 inline-flex rounded-lg border border-[#1F2937] bg-[#0B0F14] p-1">
+          <button
+            onClick={() => setBilling('MONTHLY')}
+            className={`h-10 rounded-md px-4 text-sm font-medium transition-all duration-200 ease-out ${
+              billing === 'MONTHLY' ? 'bg-white text-black' : 'text-[#9CA3AF] hover:text-[#F9FAFB]'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBilling('ANNUAL')}
+            className={`h-10 rounded-md px-4 text-sm font-medium transition-all duration-200 ease-out ${
+              billing === 'ANNUAL' ? 'bg-white text-black' : 'text-[#9CA3AF] hover:text-[#F9FAFB]'
+            }`}
+          >
+            Annual (Best Value)
+          </button>
+        </div>
       </header>
 
-      <div className="flex justify-center mb-12">
-        <div className="border border-zinc-800 p-1 flex gap-2 rounded-sm bg-zinc-900/10">
-          <button 
-            onClick={() => setBilling('MONTHLY')}
-            className={`px-8 py-2 text-[10px] font-mono uppercase tracking-widest transition-all ${billing === 'MONTHLY' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
-          >
-            Monthly Access
-          </button>
-          <button 
-            onClick={() => setBilling('ANNUAL')}
-            className={`px-8 py-2 text-[10px] font-mono uppercase tracking-widest transition-all ${billing === 'ANNUAL' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
-          >
-            Annual Program (Best Value)
-          </button>
-        </div>
-      </div>
+      <section className="mt-6 grid gap-6 md:grid-cols-2">
+        <article className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+          <p className="text-sm text-[#9CA3AF]">Standard</p>
+          <h2 className="mt-2 text-3xl font-semibold text-[#F9FAFB]">Free</h2>
+          <ul className="mt-5 space-y-3 text-sm text-[#9CA3AF]">
+            <li>Access to core paths and guided project structure</li>
+            <li>Portfolio basics and starter proof-of-work entries</li>
+            <li>Meaningful foundation for applications and internships</li>
+          </ul>
+        </article>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-        <div className="border border-zinc-900 p-12 opacity-50 flex flex-col justify-between">
-          <div>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-widest">Standard</p>
-            <p className="text-3xl font-light mb-8">Free</p>
-            <ul className="space-y-4 text-xs font-light text-zinc-600">
-              <li>• Access to introductory missions</li>
-              <li>• Standard Intelligence Hub dashboard</li>
-              <li>• Limited speed lab rotation</li>
-            </ul>
-          </div>
-        </div>
+        <article className="rounded-2xl border border-white bg-[#111827] p-6 md:p-8 relative overflow-hidden">
+          <span className="absolute right-4 top-4 rounded-full border border-white px-2 py-1 text-xs text-[#F9FAFB]">Pro</span>
+          <p className="text-sm text-[#9CA3AF]">Professional</p>
+          <h2 className="mt-2 text-3xl font-semibold text-[#F9FAFB]">
+            {billing === 'ANNUAL' ? '$5' : '$8'}
+            <span className="ml-2 text-sm font-medium text-[#9CA3AF]">/ month</span>
+          </h2>
+          {billing === 'ANNUAL' && <p className="mt-1 text-sm text-[#9CA3AF]">Billed as $60 per year</p>}
 
-        <div className="border border-white p-12 bg-zinc-900/10 relative flex flex-col justify-between overflow-hidden">
-          <div className="absolute top-0 right-0 bg-white text-black text-[8px] font-mono uppercase px-4 py-1.5 tracking-[0.2em]">Verified Professional</div>
-          <div>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-widest">Professional</p>
-            <div className="mb-8">
-              <p className="text-4xl font-light mb-1">
-                {billing === 'ANNUAL' ? '$5.00' : '$8.00'}
-                <span className="text-xs text-zinc-500 font-mono ml-2 uppercase">/ Month</span>
-              </p>
-              {billing === 'ANNUAL' && <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mt-2">Billed as $60 per year</p>}
-            </div>
-            <ul className="space-y-4 text-xs font-light mb-12">
-              <li className="flex items-center gap-3">
-                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                 Full curriculum (100+ Advanced Labs)
-              </li>
-              <li className="flex items-center gap-3">
-                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                 Professional Track Certifications
-              </li>
-              <li className="flex items-center gap-3">
-                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                 Unlimited Speed Lab simulation
-              </li>
-              <li className="flex items-center gap-3 text-zinc-400">
-                 <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span>
-                 Lab Creator access included
-              </li>
-            </ul>
-          </div>
-          <button 
+          <ul className="mt-5 space-y-3 text-sm text-[#9CA3AF]">
+            <li>Advanced project sequences and richer outputs</li>
+            <li>Full research workflows and deeper project expansion</li>
+            <li>More portfolio storage, exports, and presentation strength</li>
+          </ul>
+
+          <button
             onClick={() => onUpgrade(billing)}
-            className="w-full bg-white text-black py-4 font-mono text-sm uppercase tracking-widest hover:bg-zinc-200 transition-all shadow-xl"
+            className="mt-6 h-11 w-full rounded-lg bg-white text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200"
           >
-            Initiate Deployment
+            Upgrade to Pro
           </button>
-        </div>
-      </div>
+        </article>
+      </section>
 
-      <div className="border-t border-zinc-900 pt-16">
-        <h3 className="text-center text-xs font-mono text-zinc-600 uppercase mb-12 tracking-[0.4em]">Feature Comparison</h3>
-        <table className="w-full text-left text-sm font-light">
-          <thead>
-            <tr className="border-b border-zinc-900 text-[10px] font-mono text-zinc-800 uppercase tracking-widest">
-              <th className="pb-6 font-normal">Sovereignty Toolset</th>
-              <th className="pb-6 font-normal">Standard</th>
-              <th className="pb-6 font-normal">Professional</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-900/50">
-            {features.map(f => (
-              <tr key={f.name} className="hover:bg-zinc-900/10 transition-colors">
-                <td className="py-6 text-zinc-300">{f.name}</td>
-                <td className="py-6 text-zinc-600">{f.free}</td>
-                <td className="py-6 text-white font-medium">{f.pro}</td>
+      <section className="mt-6 rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+        <h3 className="text-xl font-semibold text-[#F9FAFB]">Plan comparison</h3>
+        <p className="mt-2 text-sm text-[#9CA3AF]">Clear differences based on your new product structure.</p>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[680px] text-left text-sm">
+            <thead>
+              <tr className="border-b border-[#1F2937] text-[#9CA3AF]">
+                <th className="py-3 font-medium">Feature</th>
+                <th className="py-3 font-medium">Standard</th>
+                <th className="py-3 font-medium">Professional</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-[#1F2937]">
+              {features.map((feature) => (
+                <tr key={feature.name}>
+                  <td className="py-4 text-[#F9FAFB]">{feature.name}</td>
+                  <td className="py-4 text-[#9CA3AF]">{feature.free}</td>
+                  <td className="py-4 text-[#F9FAFB]">{feature.pro}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 };

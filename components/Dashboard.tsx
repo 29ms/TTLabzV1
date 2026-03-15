@@ -1,8 +1,6 @@
-
-import React, { useState, useEffect } from 'react';
-import { UserMetrics, Mission, AppView, LabTrack, DashboardSubView } from '../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AppView, LabTrack, Mission, UserMetrics } from '../types';
 import VirtualSOC from './VirtualSOC';
-import NeuralBuilder from './NeuralBuilder';
 
 interface DashboardProps {
   metrics: UserMetrics;
@@ -13,170 +11,363 @@ interface DashboardProps {
   snowToggle: () => void;
   isSnowing: boolean;
   onUpdatePoints: (pts: number) => void;
-  // Added onUpdateName to satisfy NeuralBuilderProps requirements
   onUpdateName: (name: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ 
-  metrics, missions, onSelectMission, setView, onClearPathway, snowToggle, isSnowing, onUpdatePoints, onUpdateName 
+const tracks: { id: LabTrack; title: string; level: string; output: string; summary: string }[] = [
+  {
+    id: 'ETHICS',
+    title: 'AI Projects',
+    level: 'Foundations → Builder → Advanced',
+    output: 'Technical brief or case study',
+    summary: 'Understand model decisions, assess risk, and produce evidence-based analysis.',
+  },
+  {
+    id: 'DEFENDER',
+    title: 'Cybersecurity Projects',
+    level: 'Foundations → Builder → Advanced',
+    output: 'Security audit report',
+    summary: 'Evaluate threats, controls, and architecture with practical recommendations.',
+  },
+  {
+    id: 'EXECUTIVE',
+    title: 'Coding Projects',
+    level: 'Foundations → Builder → Advanced',
+    output: 'Prototype report',
+    summary: 'Build software artifacts and document approach, testing, and outcomes.',
+  },
+  {
+    id: 'INTEL',
+    title: 'Advanced Projects',
+    level: 'Builder → Advanced',
+    output: 'Research output',
+    summary: 'Develop deeper technical investigations and structured long-form work.',
+  },
+];
+
+const featuredImages = [
+  {
+    title: 'AI analysis workflow',
+    source: 'Photo: Unsplash / Growtika',
+    url: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    title: 'Security architecture review',
+    source: 'Photo: Unsplash / Kevin Ku',
+    url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    title: 'Software project planning',
+    source: 'Photo: Unsplash / Christina @ wocintechchat.com',
+    url: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1200&q=80',
+  },
+];
+
+const trackLabel: Record<LabTrack, string> = {
+  LIFE: 'Foundational Safety',
+  SOVEREIGNTY: 'Digital Identity',
+  DEFENDER: 'Cybersecurity Projects',
+  EXECUTIVE: 'Coding Projects',
+  INTEL: 'Advanced Projects',
+  ETHICS: 'AI Projects',
+  AI_ENGINEERING: 'AI Projects',
+};
+
+const allowedTracks = new Set<LabTrack>(['ETHICS', 'DEFENDER', 'EXECUTIVE', 'INTEL', 'AI_ENGINEERING']);
+
+const Dashboard: React.FC<DashboardProps> = ({
+  metrics,
+  missions,
+  onSelectMission,
+  setView,
+  onClearPathway,
+  snowToggle,
+  isSnowing,
+  onUpdatePoints,
 }) => {
   const [selectedTrack, setSelectedTrack] = useState<LabTrack | 'ALL'>(metrics.activePathway || 'ALL');
-  const [subView, setSubView] = useState<DashboardSubView>(DashboardSubView.INTEL_HUB);
+  const [showPractice, setShowPractice] = useState(false);
 
   useEffect(() => {
+    const preferredTrack = localStorage.getItem('preferredTrack') as LabTrack | null;
+    if (preferredTrack) {
+      setSelectedTrack(preferredTrack);
+      localStorage.removeItem('preferredTrack');
+      return;
+    }
     if (metrics.activePathway) setSelectedTrack(metrics.activePathway);
   }, [metrics.activePathway]);
 
-  const tracks: { id: LabTrack; label: string }[] = [
-    { id: 'LIFE', label: 'Real Life Safety' },
-    { id: 'SOVEREIGNTY', label: 'Digital Footprint' },
-    { id: 'DEFENDER', label: 'Security Analyst' },
-    { id: 'EXECUTIVE', label: 'Tech Leadership' },
-    { id: 'INTEL', label: 'OSINT Intelligence' },
-    { id: 'ETHICS', label: 'AI & Society' },
-  ];
+  const projectMissions = useMemo(
+    () => missions.filter((mission) => allowedTracks.has(mission.track)),
+    [missions],
+  );
 
-  const filteredMissions = selectedTrack === 'ALL' 
-    ? missions 
-    : missions.filter(m => m.track === selectedTrack);
+  const filteredMissions = useMemo(() => {
+    if (selectedTrack === 'ALL') return projectMissions;
+    return projectMissions.filter((mission) => mission.track === selectedTrack);
+  }, [projectMissions, selectedTrack]);
+
+  const nextProject = useMemo(
+    () => filteredMissions.find((mission) => !mission.completed) || filteredMissions[0] || null,
+    [filteredMissions],
+  );
+
+  const activeSteps = useMemo(() => {
+    const pending = filteredMissions.filter((mission) => !mission.completed);
+    return (pending.length ? pending : filteredMissions).slice(0, 3);
+  }, [filteredMissions]);
+
+  const completedProjects = projectMissions.filter((mission) => mission.completed).length;
+  const portfolioProgress = projectMissions.length
+    ? Math.round((completedProjects / projectMissions.length) * 100)
+    : 0;
+
+  if (showPractice) {
+    return (
+      <div className="h-screen overflow-hidden bg-[#0B0F14] px-6 pb-24 pt-8 md:px-10">
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-[#F9FAFB]">Cybersecurity Practice</h1>
+            <p className="mt-2 text-sm text-[#9CA3AF]">Scenario practice to strengthen project decision-making.</p>
+          </div>
+          <button
+            onClick={() => setShowPractice(false)}
+            className="h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+          >
+            Back to Home
+          </button>
+        </header>
+        <div className="h-[calc(100%-5rem)] overflow-y-auto rounded-xl border border-[#1F2937] bg-[#111827] p-4">
+          <VirtualSOC onUpdatePoints={onUpdatePoints} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 md:p-12 animate-in fade-in duration-1000 pb-32 h-screen flex flex-col overflow-hidden">
-      <header className="mb-8 border-b border-zinc-900 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 shrink-0">
-        <div>
-          <div className="flex items-center gap-4 mb-3">
-            <h1 className="text-4xl font-light tracking-tighter uppercase text-zinc-100">Intelligence_Ops</h1>
-            {selectedTrack !== 'ALL' && subView === DashboardSubView.INTEL_HUB && (
-              <button 
-                onClick={() => { onClearPathway(); setSelectedTrack('ALL'); }}
-                className="text-[9px] font-mono text-zinc-400 hover:text-zinc-100 uppercase border border-zinc-800 px-3 py-1 tracking-widest transition-all"
-              >
-                Clear_Filter [x]
-              </button>
-            )}
-          </div>
-          <div className="flex gap-8 items-center">
-            <p className="text-zinc-400 font-mono text-[10px] uppercase tracking-widest">
-              {metrics.labsCompleted} VERIFIED / {metrics.points.toLocaleString()} POINTS
-            </p>
-            <div className="h-[1px] w-8 bg-zinc-800" />
-            <button 
-              onClick={snowToggle}
-              className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-colors ${isSnowing ? 'text-white' : 'text-zinc-700 hover:text-zinc-300'}`}
+    <div className="relative h-screen overflow-hidden bg-[#0B0F14] px-6 pb-28 pt-8 md:px-10">
+      <div className="h-full overflow-y-auto pr-1 pb-6 space-y-6">
+        <header className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+          <p className="text-sm text-[#9CA3AF]">Home</p>
+          <h1 className="mt-2 text-3xl font-semibold text-[#F9FAFB]">Build work worth showing.</h1>
+          <p className="mt-3 max-w-3xl text-sm text-[#9CA3AF]">
+            TechTales guides you from first concept to portfolio-ready project output with clear structure and meaningful depth.
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              onClick={() => (nextProject ? onSelectMission(nextProject.id) : null)}
+              className="h-11 rounded-lg bg-white px-5 text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200"
             >
-              [ {isSnowing ? 'DISABLE_SNOW' : 'ENABLE_SNOW'} ]
+              {nextProject ? 'Continue Project' : 'Start Project'}
+            </button>
+            <button
+              onClick={() => setView(AppView.PORTFOLIO)}
+              className="h-11 rounded-lg border border-[#1F2937] px-5 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+            >
+              Add to Portfolio
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
+              <p className="text-sm text-[#9CA3AF]">Projects Completed</p>
+              <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{completedProjects}</p>
+            </article>
+            <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
+              <p className="text-sm text-[#9CA3AF]">Portfolio Progress</p>
+              <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{portfolioProgress}%</p>
+            </article>
+            <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
+              <p className="text-sm text-[#9CA3AF]">Why this matters</p>
+              <p className="mt-2 text-sm text-[#F9FAFB]">Your outputs become proof for applications, scholarships, and internships.</p>
+            </article>
+          </div>
+        </header>
+
+        <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-[#F9FAFB]">Visual project inspiration</h2>
+              <p className="mt-2 text-sm text-[#9CA3AF]">
+                Free-to-use Unsplash visuals to add polish while keeping a serious product tone.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {featuredImages.map((image) => (
+              <article key={image.title} className="overflow-hidden rounded-xl border border-[#1F2937] bg-[#0B0F14]">
+                <img src={image.url} alt={image.title} className="h-36 w-full object-cover" loading="lazy" />
+                <div className="p-4">
+                  <h3 className="text-sm font-medium text-[#F9FAFB]">{image.title}</h3>
+                  <p className="mt-1 text-xs text-[#9CA3AF]">{image.source}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+          <article className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+            <p className="text-sm text-[#9CA3AF]">Your next meaningful move</p>
+            <h2 className="mt-2 text-xl font-semibold text-[#F9FAFB]">{nextProject ? nextProject.title : 'Choose a path to begin'}</h2>
+            <p className="mt-2 text-sm text-[#9CA3AF]">
+              {nextProject
+                ? nextProject.description
+                : 'Select a track below. You will complete guided steps and produce a structured output.'}
+            </p>
+
+            {nextProject && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border border-[#1F2937] bg-[#0B0F14] p-3 text-sm text-[#9CA3AF]">
+                  Track: <span className="text-[#F9FAFB]">{trackLabel[nextProject.track]}</span>
+                </div>
+                <div className="rounded-lg border border-[#1F2937] bg-[#0B0F14] p-3 text-sm text-[#9CA3AF]">
+                  Difficulty: <span className="text-[#F9FAFB]">{nextProject.difficulty}</span>
+                </div>
+                <div className="rounded-lg border border-[#1F2937] bg-[#0B0F14] p-3 text-sm text-[#9CA3AF]">
+                  Output: <span className="text-[#F9FAFB]">Portfolio artifact</span>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-[#1F2937] bg-[#0B0F14] p-3">
+                <p className="text-sm font-medium text-[#F9FAFB]">Project stages</p>
+                <p className="mt-1 text-sm text-[#9CA3AF]">Context → Concept → Application → Output → Reflection</p>
+              </div>
+              <div className="rounded-lg border border-[#1F2937] bg-[#0B0F14] p-3">
+                <p className="text-sm font-medium text-[#F9FAFB]">Next action</p>
+                <p className="mt-1 text-sm text-[#9CA3AF]">Complete your next guided step and add it to Portfolio.</p>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-[#F9FAFB]">Advanced Layer</h2>
+            <p className="mt-2 text-sm text-[#9CA3AF]">Use these tools when you want deeper work.</p>
+            <div className="mt-4 space-y-3">
+              <button
+                onClick={() => setView(AppView.RESEARCH)}
+                className="h-10 w-full rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+              >
+                Open Research Suite
+              </button>
+              <button
+                onClick={() => setShowPractice(true)}
+                className="h-10 w-full rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+              >
+                Practice Scenarios
+              </button>
+              <button
+                onClick={snowToggle}
+                className="h-10 w-full rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#9CA3AF] transition-all duration-200 ease-out hover:text-[#F9FAFB]"
+              >
+                {isSnowing ? 'Disable Snow' : 'Enable Snow'}
+              </button>
+            </div>
+          </article>
+        </section>
+
+        <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-[#F9FAFB]">Paths</h2>
+              <p className="mt-2 text-sm text-[#9CA3AF]">Choose a path and progress from foundations to advanced work.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  setSelectedTrack('ALL');
+                  onClearPathway();
+                }}
+                className={`h-9 rounded-lg px-3 text-sm font-medium transition-all duration-200 ease-out ${
+                  selectedTrack === 'ALL'
+                    ? 'bg-white text-black'
+                    : 'border border-[#1F2937] text-[#9CA3AF] hover:text-[#F9FAFB]'
+                }`}
+              >
+                All
+              </button>
+              {tracks.map((track) => (
+                <button
+                  key={track.id}
+                  onClick={() => setSelectedTrack(track.id)}
+                  className={`h-9 rounded-lg px-3 text-sm font-medium transition-all duration-200 ease-out ${
+                    selectedTrack === track.id
+                      ? 'bg-white text-black'
+                      : 'border border-[#1F2937] text-[#9CA3AF] hover:text-[#F9FAFB]'
+                  }`}
+                >
+                  {track.title}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {tracks.map((track) => (
+              <article key={track.id} className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
+                <h3 className="text-xl font-semibold text-[#F9FAFB]">{track.title}</h3>
+                <p className="mt-2 text-sm text-[#9CA3AF]">{track.summary}</p>
+                <p className="mt-2 text-sm text-[#9CA3AF]">Levels: <span className="text-[#F9FAFB]">{track.level}</span></p>
+                <p className="mt-1 text-sm text-[#9CA3AF]">Output: <span className="text-[#F9FAFB]">{track.output}</span></p>
+                <button
+                  onClick={() => setSelectedTrack(track.id)}
+                  className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+                >
+                  Choose Path
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+          <h2 className="text-xl font-semibold text-[#F9FAFB]">Projects</h2>
+          <p className="mt-2 text-sm text-[#9CA3AF]">Complete these guided project steps and turn them into portfolio proof.</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {activeSteps.map((mission) => (
+              <article key={mission.id} className="flex min-h-[240px] flex-col justify-between rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
+                <div>
+                  <p className="text-sm text-[#9CA3AF]">{trackLabel[mission.track]}</p>
+                  <h3 className="mt-2 text-xl font-semibold text-[#F9FAFB]">{mission.title}</h3>
+                  <p className="mt-2 text-sm text-[#9CA3AF] line-clamp-3">{mission.description}</p>
+                </div>
+                <button
+                  onClick={() => onSelectMission(mission.id)}
+                  className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-left text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+                >
+                  {mission.completed ? 'Add to Portfolio' : 'Start Project Step'}
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#1F2937] bg-[#0B0F14]/95 p-4 backdrop-blur md:left-[18rem]">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[#9CA3AF]">
+            {nextProject ? `Next step: ${nextProject.title}` : 'All visible project steps complete. Add your output to Portfolio.'}
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => (nextProject ? onSelectMission(nextProject.id) : null)}
+              className="h-10 rounded-lg bg-white px-4 text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200"
+            >
+              Continue Project
+            </button>
+            <button
+              onClick={() => setView(AppView.PORTFOLIO)}
+              className="h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+            >
+              Add to Portfolio
             </button>
           </div>
         </div>
-
-        <nav className="flex bg-zinc-950 border border-zinc-900 p-1">
-          {[
-            { id: DashboardSubView.INTEL_HUB, label: 'Intel_Hub' },
-            { id: DashboardSubView.VIRTUAL_SOC, label: 'Security_SOC' },
-            { id: DashboardSubView.NEURAL_OPS, label: 'Intelligence_Lab' }
-          ].map(view => (
-            <button
-              key={view.id}
-              onClick={() => setSubView(view.id)}
-              className={`px-6 py-3 text-[10px] font-mono uppercase tracking-widest transition-all relative ${subView === view.id ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-100'}`}
-            >
-              {view.label}
-              {view.id === DashboardSubView.NEURAL_OPS && !metrics.isPremium && (
-                <span className="ml-2 text-[8px] bg-zinc-800 text-zinc-400 px-1 py-0.5 rounded-sm">LOCKED</span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </header>
-
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {subView === DashboardSubView.INTEL_HUB && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
-            <div className="flex flex-wrap gap-4 mb-8">
-              <button 
-                onClick={() => { onClearPathway(); setSelectedTrack('ALL'); }}
-                className={`text-[10px] font-mono px-4 py-2 border transition-all ${selectedTrack === 'ALL' ? 'bg-zinc-800 text-zinc-100 border-zinc-600 shadow-inner' : 'border-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}`}
-              >
-                ALL_MODULES
-              </button>
-              {tracks.map(t => (
-                <button 
-                  key={t.id}
-                  onClick={() => setSelectedTrack(t.id)}
-                  className={`text-[10px] font-mono px-4 py-2 border transition-all ${selectedTrack === t.id ? 'bg-zinc-800 text-zinc-100 border-zinc-600 shadow-inner' : 'border-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}`}
-                >
-                  {t.id}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-              {filteredMissions.map((mission) => (
-                <button
-                  key={mission.id}
-                  onClick={() => onSelectMission(mission.id)}
-                  className={`text-left border border-zinc-900 p-10 hover:bg-zinc-900/20 transition-all duration-700 group flex flex-col justify-between h-[300px] ${mission.completed ? 'opacity-30' : ''}`}
-                >
-                  <div>
-                    <div className="flex justify-between items-start mb-10">
-                      <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest group-hover:text-zinc-300 transition-colors">[{mission.track}]</span>
-                      {mission.premium && !metrics.isPremium && (
-                         <span className="text-[8px] font-mono uppercase bg-zinc-900 border border-zinc-800 px-3 py-1 text-zinc-400">PRO_ACCESS</span>
-                      )}
-                    </div>
-                    <h3 className="text-2xl font-light mb-4 group-hover:tracking-tight transition-all text-zinc-100 uppercase leading-tight">{mission.title}</h3>
-                    <p className="text-zinc-400 text-[13px] leading-relaxed line-clamp-2 font-light">{mission.description}</p>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-zinc-500 group-hover:text-zinc-100 transition-all pt-6 border-t border-zinc-800">
-                    <span>{mission.completed ? 'VERIFIED' : 'INITIATE'}</span>
-                    <span className="opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">→</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {subView === DashboardSubView.VIRTUAL_SOC && <VirtualSOC onUpdatePoints={onUpdatePoints} />}
-        
-        {subView === DashboardSubView.NEURAL_OPS && (
-          <div className="h-full">
-            {!metrics.isPremium ? (
-              <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-8 animate-in zoom-in-95 duration-700">
-                <div className="w-20 h-20 border border-zinc-800 flex items-center justify-center text-4xl text-zinc-600">✢</div>
-                <div className="space-y-3">
-                  <h2 className="text-3xl font-light text-zinc-100 uppercase tracking-tighter">Intelligence Lab Locked</h2>
-                  <p className="text-zinc-400 text-sm max-w-md mx-auto leading-relaxed">
-                    The advanced Red Team and Blue Team technical training modules are exclusive to Professional Grade operatives.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setView(AppView.UPGRADE)}
-                  className="bg-zinc-100 text-black px-12 py-4 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl"
-                >
-                  Unlock Access
-                </button>
-              </div>
-            ) : (
-              <NeuralBuilder 
-                isPremium={metrics.isPremium} 
-                // Fix: Added missing operatorName and onUpdateOperatorName properties
-                operatorName={metrics.operatorName || ''}
-                onUpdateOperatorName={onUpdateName}
-                onComplete={() => {
-                  onUpdatePoints(500); 
-                }} 
-                onExit={() => setSubView(DashboardSubView.INTEL_HUB)} 
-              />
-            )}
-          </div>
-        )}
       </div>
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-      `}</style>
     </div>
   );
 };

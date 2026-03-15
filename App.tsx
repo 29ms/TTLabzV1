@@ -93,7 +93,7 @@ if (stateSnap.exists()) {
   }
 
   if (saved?.view) {
-    setView(saved.view);
+    setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
   }
 }
 
@@ -111,7 +111,7 @@ if (stateSnap.exists()) {
       }
 
       if (saved?.view) {
-        setView(saved.view);
+        setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
       } 
     
       if (saved?.researchState) {
