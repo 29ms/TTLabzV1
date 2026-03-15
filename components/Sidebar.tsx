@@ -13,19 +13,10 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCollapsed, setIsCollapsed, onLogout }) => {
   const navItems = [
     { label: 'Home', view: AppView.DASHBOARD, short: 'HM' },
-    { label: 'Paths', view: AppView.DASHBOARD, short: 'PA' },
     { label: 'Projects', view: AppView.DASHBOARD, short: 'PR' },
-    { label: 'Portfolio', view: AppView.PORTFOLIO, short: 'PF' },
-    { label: 'Research Suite', view: isPremium ? AppView.RESEARCH : AppView.UPGRADE, short: 'RS' },
-    { label: 'Library', view: AppView.LEARN, short: 'LB' },
-    { label: 'Account', view: AppView.PORTFOLIO, short: 'AC' },
+    { label: 'Certificates', view: AppView.PORTFOLIO, short: 'CT' },
+    { label: 'Profile', view: AppView.PORTFOLIO, short: 'PF' },
   ];
-
-  const isItemActive = (label: string, view: AppView) => {
-    if (['Home', 'Paths', 'Projects'].includes(label)) return currentView === AppView.DASHBOARD;
-    if (label === 'Account') return currentView === AppView.PORTFOLIO;
-    return currentView === view;
-  };
 
   return (
     <aside
@@ -36,8 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
       <div className={`flex items-center justify-between p-5 ${isCollapsed ? 'px-3' : ''}`}>
         {!isCollapsed && (
           <div>
-            <h1 className="text-xl font-semibold text-[#F9FAFB]">TechTales Labs</h1>
-            <p className="mt-1 text-sm text-[#9CA3AF]">Guided Portfolio Builder</p>
+            <h1 className="text-xl font-semibold text-[#F9FAFB]">TechTales</h1>
+            <p className="mt-1 text-sm text-[#9CA3AF]">Portfolio Builder</p>
           </div>
         )}
         <button
@@ -68,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
               className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${
                 isCollapsed ? 'justify-center' : 'justify-start'
               } ${
-                isItemActive(item.label, item.view)
+                currentView === item.view
                   ? 'bg-[#111827] text-[#F9FAFB]'
                   : 'text-[#9CA3AF] hover:bg-[#111827] hover:text-[#F9FAFB]'
               }`}

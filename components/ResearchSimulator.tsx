@@ -214,50 +214,49 @@ useEffect(() => {
 
   if (!isPremium) {
     return (
-      <div className="p-12 max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center animate-in fade-in">
-        <h2 className="text-2xl font-light mb-4 uppercase tracking-widest text-zinc-500">Research Division Locked</h2>
-        <p className="text-zinc-600 font-mono text-[10px] mb-8 uppercase tracking-widest">Office of the Director of Research // Clearance Level Alpha Required</p>
-        <button className="text-[10px] font-mono border border-zinc-800 px-8 py-3 uppercase tracking-widest hover:bg-zinc-300 hover:text-black transition-all">Request Professional Clearance</button>
+      <div className="mx-auto max-w-4xl p-8 md:p-12">
+        <div className="rounded-2xl border border-[#1F2937] bg-[#111827] p-8 text-center">
+          <h2 className="text-3xl font-semibold text-[#F9FAFB]">Research Suite is part of Pro</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-[#9CA3AF]">
+            You can build serious projects on the Standard plan, then unlock Research Suite for advanced long-form outputs.
+          </p>
+          <button className="mt-6 h-11 rounded-lg border border-[#1F2937] px-5 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white">
+            Upgrade to Pro
+          </button>
+        </div>
       </div>
     );
   }
 
   if (showNameGate) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-12 space-y-10 animate-in fade-in duration-500">
-        <div className="text-center space-y-4">
-          <h2 className="text-3xl font-light text-white uppercase tracking-tighter">Identity Confirmation Required</h2>
-          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest max-w-md mx-auto">
-            The Director of Research requires your verified legal name for the Elite Research Specialist accreditation.
-          </p>
+      <div className="mx-auto max-w-3xl p-8 md:p-12">
+        <div className="rounded-2xl border border-[#1F2937] bg-[#111827] p-8">
+          <h2 className="text-3xl font-semibold text-[#F9FAFB]">Confirm your name</h2>
+          <p className="mt-3 text-sm text-[#9CA3AF]">Your name is required for certificate generation and verified portfolio records.</p>
+          <form onSubmit={handleNameSubmit} className="mt-6 space-y-4">
+            <input 
+              type="text" 
+              autoFocus
+              placeholder="Full name"
+              className="h-11 w-full rounded-lg border border-[#1F2937] bg-[#0B0F14] px-3 text-sm text-[#F9FAFB] outline-none transition-all duration-200 ease-out focus:border-white"
+              value={tempName}
+              onChange={e => setTempName(e.target.value)}
+            />
+            <button className="h-11 rounded-lg bg-white px-5 text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200">Generate Certificate</button>
+          </form>
         </div>
-        <form onSubmit={handleNameSubmit} className="w-full max-w-sm space-y-6">
-          <input 
-            type="text" 
-            autoFocus
-            placeholder="FULL LEGAL NAME"
-            className="w-full bg-black border border-zinc-800 p-5 text-center font-mono text-xs tracking-widest text-white outline-none focus:border-white transition-all uppercase rounded-xl"
-            value={tempName}
-            onChange={e => setTempName(e.target.value)}
-          />
-          <button className="w-full bg-white text-black py-5 font-mono text-[10px] uppercase tracking-[0.4em] font-bold hover:bg-zinc-200 transition-all rounded-xl shadow-xl">Confirm & Generate Certificate</button>
-        </form>
       </div>
     );
   }
 
   if (isGeneratingCert) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-12 space-y-12 animate-in fade-in duration-1000 text-center">
-        <div className="relative">
-          <div className="w-24 h-24 border border-zinc-800 rounded-full animate-pulse flex items-center justify-center">
-             <div className="w-16 h-16 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <div className="absolute -top-4 -right-4 bg-white text-black text-[9px] font-mono px-3 py-1 uppercase tracking-widest">Mastery Detected</div>
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl font-light uppercase tracking-[0.2em] text-white">Synthesizing_Research_Credential</h2>
-          <p className="text-zinc-500 font-mono text-[10px] uppercase tracking-widest">Director of Research: Finalizing B&W High-Fidelity Accreditation...</p>
+      <div className="mx-auto max-w-3xl p-8 md:p-12">
+        <div className="rounded-2xl border border-[#1F2937] bg-[#111827] p-8 text-center">
+          <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <h2 className="text-3xl font-semibold text-[#F9FAFB]">Generating your certificate</h2>
+          <p className="mt-3 text-sm text-[#9CA3AF]">Finalizing verified output for your Research Suite completion.</p>
         </div>
       </div>
     );

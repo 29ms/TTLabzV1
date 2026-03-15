@@ -11,11 +11,8 @@ import Sidebar from './components/Sidebar';
 import MissionView from './components/MissionView';
 import PortfolioView from './components/PortfolioView';
 import LearnView from './components/LearnView';
-import InfiniteSection from './components/InfiniteSection';
 import UpgradeView from './components/UpgradeView';
-import LabCreator from './components/LabCreator';
 import ResearchSimulator from './components/ResearchSimulator';
-import NeuralBuilder from './components/NeuralBuilder';
 import AuthView from './components/AuthView';
 import SnowOverlay from './components/SnowOverlay';
 import { auth, onAuthStateChanged, signOut, sendEmailVerification, User } from './services/firebase';
@@ -230,24 +227,6 @@ useEffect(() => {
     }));
   };
 
-  const handleNeuralComplete = (cert: UserCertificate) => {
-    setMetrics(prev => ({ 
-      ...prev, 
-      neuralBuilderCompleted: true, 
-      points: prev.points + 1000,
-      trackProgress: { ...prev.trackProgress, AI_ENGINEERING: (prev.trackProgress.AI_ENGINEERING || 0) + 1 },
-      earnedCertificates: [...prev.earnedCertificates, cert]
-    }));
-  };
-
-  const addQuickPoints = (pts: number, track: LabTrack) => {
-    setMetrics(prev => ({ 
-      ...prev, 
-      points: prev.points + pts,
-      trackProgress: { ...prev.trackProgress, [track]: (prev.trackProgress[track] || 0) + 0.1 }
-    }));
-  };
-
   const handleUpgrade = (plan: 'MONTHLY' | 'ANNUAL') => {
     if (!user) {
       alert("Error: No user session detected. Please sign in to upgrade.");
@@ -357,9 +336,7 @@ window.location.href = url;
     <div className="flex min-h-screen bg-black text-zinc-300 font-sans selection:bg-zinc-200 selection:text-black">
       {isSnowing && <SnowOverlay />}
       
-      {view === AppView.SPEED_LABS ? (
-        <InfiniteSection onComplete={addQuickPoints} onExit={() => setView(AppView.DASHBOARD)} />
-      ) : view === AppView.MISSION && activeMissionId ? (
+      {view === AppView.MISSION && activeMissionId ? (
         <MissionView mission={missions.find(m => m.id === activeMissionId)!} onExit={() => setView(AppView.DASHBOARD)} onComplete={completeMission} />
       ) : (
         <>
@@ -381,7 +358,6 @@ window.location.href = url;
             {view === AppView.PORTFOLIO && <PortfolioView metrics={metrics} missions={missions} onUpdateName={handleUpdateName} onActivatePathway={handleActivatePathway} onSelectMission={selectMission} setView={setView} onLogout={handleLogout} />}
             {view === AppView.LEARN && <LearnView />}
             {view === AppView.UPGRADE && <UpgradeView onUpgrade={handleUpgrade} />}
-            {view === AppView.LAB_CREATOR && <LabCreator isPremium={metrics.isPremium} onResearchComplete={() => {}} />}
             {view === AppView.RESEARCH && (
   <ResearchSimulator
     isPremium={metrics.isPremium}
@@ -392,7 +368,6 @@ window.location.href = url;
     setResearchState={setResearchState}
   />
 )}
-            {view === AppView.NEURAL_BUILDER && <NeuralBuilder isPremium={metrics.isPremium} operatorName={metrics.operatorName || ''} onComplete={handleNeuralComplete} onExit={() => setView(AppView.DASHBOARD)} onUpdateOperatorName={handleUpdateName} />}
           </main>
         </>
       )}
