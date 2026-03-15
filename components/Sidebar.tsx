@@ -10,12 +10,21 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
+const iconClass = 'h-4 w-4';
+
+const icons = {
+  home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={iconClass}><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg>,
+  projects: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={iconClass}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16"/><path d="M11 9h7M11 13h7M11 17h4"/></svg>,
+  certificates: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={iconClass}><circle cx="12" cy="10" r="5"/><path d="m9 14-2 7 5-2 5 2-2-7"/></svg>,
+  profile: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={iconClass}><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.3-6 8-6s6.5 2 8 6"/></svg>,
+};
+
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCollapsed, setIsCollapsed, onLogout }) => {
   const navItems = [
-    { label: 'Home', view: AppView.DASHBOARD, short: 'HM' },
-    { label: 'Projects', view: AppView.DASHBOARD, short: 'PR' },
-    { label: 'Certificates', view: AppView.PORTFOLIO, short: 'CT' },
-    { label: 'Profile', view: AppView.PORTFOLIO, short: 'PF' },
+    { label: 'Home', view: AppView.DASHBOARD, icon: icons.home },
+    { label: 'Projects', view: AppView.DASHBOARD, icon: icons.projects },
+    { label: 'Certificates', view: AppView.PORTFOLIO, icon: icons.certificates },
+    { label: 'Profile', view: AppView.PORTFOLIO, icon: icons.profile },
   ];
 
   return (
@@ -64,8 +73,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
                   : 'text-[#9CA3AF] hover:bg-[#111827] hover:text-[#F9FAFB]'
               }`}
             >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded border border-[#1F2937] text-xs">
-                {item.short}
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded border border-[#1F2937]">
+                {item.icon}
               </span>
               {!isCollapsed && <span>{item.label}</span>}
             </button>
