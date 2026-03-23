@@ -79,11 +79,6 @@ const blob = await fetchResponse.blob();
       return URL.createObjectURL(blob);
     } catch (error) {
       console.error("Video Gen Error:", error);
-      if (error instanceof Error && error.message.includes("Requested entity was not found")) {
-        if (aistudio && typeof aistudio.openSelectKey === 'function') {
-          await aistudio.openSelectKey();
-        }
-      }
       throw error;
     }
   }

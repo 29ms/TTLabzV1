@@ -1,26 +1,102 @@
-import Privacy from "./components/Privacy";
-import Terms from "./components/Terms";
-
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./services/firebase";
-
-import React, { useState, useEffect } from 'react';
-import Terminal from './components/Terminal';
-import Dashboard from './components/Dashboard';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import Sidebar from './components/Sidebar';
-import MissionView from './components/MissionView';
-import PortfolioView from './components/PortfolioView';
-import LearnView from './components/LearnView';
-import InfiniteSection from './components/InfiniteSection';
-import UpgradeView from './components/UpgradeView';
-import LabCreator from './components/LabCreator';
-import ResearchSimulator from './components/ResearchSimulator';
-import NeuralBuilder from './components/NeuralBuilder';
 import AuthView from './components/AuthView';
 import SnowOverlay from './components/SnowOverlay';
-import { auth, onAuthStateChanged, signOut, sendEmailVerification, User } from './services/firebase';
-import { AppView, UserMetrics, Mission, LabTrack, UserCertificate } from './types';
+import { db, auth, onAuthStateChanged, signOut, sendEmailVerification, User } from './services/firebase';
+import { AppView, LabTrack, Mission, PortfolioTab, UserCertificate, UserMetrics } from './types';
 import { MISSIONS, INITIAL_METRICS } from './constants';
+
+const Terminal = lazy(() => import('./components/Terminal'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const MissionView = lazy(() => import('./components/MissionView'));
+const PortfolioView = lazy(() => import('./components/PortfolioView'));
+const UpgradeView = lazy(() => import('./components/UpgradeView'));
+const ResearchSimulator = lazy(() => import('./components/ResearchSimulator'));
+
+const TRACKS: LabTrack[] = ['ETHICS', 'DEFENDER', 'EXECUTIVE', 'INTEL'];
+const DEFAULT_RESEARCH_STATE = {
+  level: null,
+  percent: 0,
+  notes: '',
+  sections: null,
+  activeSectionId: 'q',
+};
+
+const normalizeView = (incoming?: AppView): AppView => {
+  if (!incoming) return AppView.DASHBOARD;
+  if ([AppView.DASHBOARD, AppView.TRACKS, AppView.PORTFOLIO, AppView.CERTIFICATES, AppView.SETTINGS, AppView.UPGRADE, AppView.RESEARCH].includes(incoming)) {
+    return incoming;
+  }
+  if (incoming === AppView.MISSION) return AppView.TRACKS;
+  return AppView.DASHBOARD;
+};
+
+const isTrack = (value: unknown): value is LabTrack => typeof value === 'string' && TRACKS.includes(value as LabTrack);
+
+const normalizeTrackProgress = (value: unknown): Record<LabTrack, number> => {
+  const source = typeof value === 'object' && value !== null ? value as Partial<Record<LabTrack, unknown>> : {};
+
+  return TRACKS.reduce((acc, track) => {
+    acc[track] = typeof source[track] === 'number' ? source[track] : 0;
+    return acc;
+  }, {} as Record<LabTrack, number>);
+};
+
+const normalizeMetrics = (value: unknown, isPremium: boolean): UserMetrics => {
+  const source = typeof value === 'object' && value !== null ? value as Partial<UserMetrics> : {};
+
+  return {
+    ...INITIAL_METRICS,
+    ...source,
+    isPremium,
+    activePathway: source.activePathway === 'ALL' || isTrack(source.activePathway) ? source.activePathway : 'ALL',
+    earnedCertificates: Array.isArray(source.earnedCertificates) ? source.earnedCertificates : [],
+    trackProgress: normalizeTrackProgress(source.trackProgress),
+  };
+};
+
+const normalizeMission = (savedMission: unknown): Mission | null => {
+  if (typeof savedMission !== 'object' || savedMission === null) return null;
+
+  const source = savedMission as Partial<Mission> & { id?: unknown; completed?: unknown };
+  if (typeof source.id !== 'string') return null;
+
+  const baseMission = MISSIONS.find((mission) => mission.id === source.id);
+  if (!baseMission) return null;
+
+  return {
+    ...baseMission,
+    completed: typeof source.completed === 'boolean' ? source.completed : baseMission.completed,
+  };
+};
+
+const normalizeMissions = (value: unknown): Mission[] => {
+  if (!Array.isArray(value)) return MISSIONS;
+
+  const savedMap = new Map<string, Mission>();
+  value.forEach((entry) => {
+    const normalized = normalizeMission(entry);
+    if (normalized) savedMap.set(normalized.id, normalized);
+  });
+
+  if (saved?.view) {
+    setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
+  }
+}
+
+const normalizeResearchState = (value: unknown) => {
+  if (typeof value !== 'object' || value === null) return DEFAULT_RESEARCH_STATE;
+  const source = value as Partial<typeof DEFAULT_RESEARCH_STATE>;
+
+  return {
+    ...DEFAULT_RESEARCH_STATE,
+    ...source,
+    percent: typeof source.percent === 'number' ? source.percent : DEFAULT_RESEARCH_STATE.percent,
+    notes: typeof source.notes === 'string' ? source.notes : DEFAULT_RESEARCH_STATE.notes,
+    activeSectionId: typeof source.activeSectionId === 'string' ? source.activeSectionId : DEFAULT_RESEARCH_STATE.activeSectionId,
+  };
+};
 
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>(AppView.TERMINAL);
@@ -31,84 +107,8 @@ const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSnowing, setIsSnowing] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [researchState, setResearchState] = useState({
-  level: null,
-  percent: 0,
-  notes: "",
-  sections: null,
-  activeSectionId: "q",
-});
-
-
-  // --- Persisted "cloud save" of user progress ---
-  const saveProgressBlob = async (uid: string, blob: any) => {
-    const ref = doc(db, "users", uid, "state", "main");
-    await setDoc(ref, { blob, updatedAt: serverTimestamp() }, { merge: true });
-  };
-
-  const loadProgressBlob = async (uid: string) => {
-    const ref = doc(db, "users", uid, "state", "main");
-    const snap = await getDoc(ref);
-    return snap.exists() ? (snap.data()?.blob ?? null) : null;
-  }; 
-  // end of pasted
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-  const userRef = doc(db, "users", currentUser.uid);
-  const snap = await getDoc(userRef);
-
-  if (!snap.exists()) {
-    await setDoc(userRef, {
-      email: currentUser.email || "",
-      plan: "free",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    setMetrics(prev => ({ ...prev, isPremium: false }));
-  } else {
-    const data = snap.data();
-    const isPro = data?.plan === "pro";
-    setMetrics(prev => ({ ...prev, isPremium: isPro }));
-  }
-
-  // ===== LOAD SAVED APP STATE =====
-const stateRef = doc(db, "users", currentUser.uid, "state", "main");
-const stateSnap = await getDoc(stateRef);
-
-if (stateSnap.exists()) {
-  const saved = stateSnap.data()?.blob;
-
-  if (saved?.metrics) {
-    setMetrics(prev => ({
-      ...saved.metrics,
-      isPremium: prev.isPremium, // keep plan logic
-    }));
-  }
-
-  if (saved?.missions) {
-    setMissions(saved.missions);
-  }
-
-  if (saved?.view) {
-    setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
-  }
-}
-
-      // ✅ Load saved progress (research, missions, certificates, points, etc.)
-      const saved = await loadProgressBlob(currentUser.uid);
-
-      if (saved?.metrics) {
-        // IMPORTANT: keep isPremium controlled by Firestore "plan"
-        const premiumFromPlan = (snap.exists() && snap.data()?.plan === "pro");
-        setMetrics({ ...saved.metrics, isPremium: premiumFromPlan });
-      }
-
-      if (saved?.missions) {
-        setMissions(saved.missions);
-      }
+  const [isStateHydrated, setIsStateHydrated] = useState(false);
+  const [researchState, setResearchState] = useState(DEFAULT_RESEARCH_STATE);
 
       if (saved?.view) {
         setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
@@ -117,183 +117,188 @@ if (stateSnap.exists()) {
       if (saved?.researchState) {
   setResearchState(saved.researchState);
       }
-      // end of pasted
-  
-}
 
-      setIsInitializing(false);
+      try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+
+        let isPro = false;
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            email: currentUser.email || '',
+            plan: 'free',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        } else {
+          isPro = userSnap.data()?.plan === 'pro';
+        }
+
+        setMetrics((prev) => ({ ...prev, isPremium: isPro }));
+
+        const stateRef = doc(db, 'users', currentUser.uid, 'state', 'main');
+        const stateSnap = await getDoc(stateRef);
+        const saved = stateSnap.exists() ? stateSnap.data()?.blob : null;
+
+        if (saved?.metrics) setMetrics(normalizeMetrics(saved.metrics, isPro));
+        else setMetrics((prev) => ({ ...prev, isPremium: isPro }));
+
+        if (saved?.missions) setMissions(normalizeMissions(saved.missions));
+        else setMissions(MISSIONS);
+        if (saved?.view) setView(normalizeView(saved.view));
+        else setView(AppView.DASHBOARD);
+        if (saved?.researchState) setResearchState(normalizeResearchState(saved.researchState));
+        else setResearchState(DEFAULT_RESEARCH_STATE);
+        setActiveMissionId(null);
+        setIsStateHydrated(true);
+      } finally {
+        setIsInitializing(false);
+      }
     });
+
     return () => unsubscribe();
   }, []);
 
-  // ===============================
-// AUTO SAVE USER PROGRESS (CLOUD SAVE)
-// ===============================
-useEffect(() => {
-  if (!user) return;
-
-  const t = setTimeout(async () => {
-    try {
-      const ref = doc(db, "users", user.uid, "state", "main");
-
-      await setDoc(
-        ref,
-        {
-          blob: {
-            metrics,
-            missions,
-            view,
-            researchState
+  useEffect(() => {
+    if (!user || !isStateHydrated) return;
+    const timer = setTimeout(async () => {
+      try {
+        const ref = doc(db, 'users', user.uid, 'state', 'main');
+        await setDoc(
+          ref,
+          {
+            blob: { metrics, missions, view, researchState },
+            updatedAt: serverTimestamp(),
           },
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-    } catch (e) {
-      console.error("Autosave failed:", e);
-    }
-  }, 600); // prevents too many writes
+          { merge: true },
+        );
+      } catch (error) {
+        console.error('Autosave failed:', error);
+      }
+    }, 600);
 
-  return () => clearTimeout(t);
-}, [user, metrics, missions, view, researchState]);
+    return () => clearTimeout(timer);
+  }, [user, isStateHydrated, metrics, missions, view, researchState]);
 
-// end of pasted
-
-  const handleTerminalComplete = () => {
-    setView(AppView.DASHBOARD);
-  };
-
-  const handleAuthSuccess = () => {
-    setView(AppView.DASHBOARD);
-  };
+  const handleTerminalComplete = () => setView(AppView.DASHBOARD);
+  const handleAuthSuccess = () => setView(AppView.DASHBOARD);
 
   const handleLogout = async () => {
     await signOut(auth);
     setView(AppView.TERMINAL);
   };
 
-  const handleUpdatePoints = (pts: number) => {
-    setMetrics(prev => ({
-      ...prev,
-      points: Math.max(0, prev.points + pts)
-    }));
-  };
-
   const selectMission = (id: string) => {
-    const mission = missions.find(m => m.id === id);
-    if (mission?.premium && !metrics.isPremium) {
-      setView(AppView.UPGRADE);
-      return;
+    const mission = missions.find((m) => m.id === id);
+    if (!mission) return;
+
+    if (mission.premium && !metrics.isPremium) {
+      const basicDone = missions.filter((m) => m.completed && m.level === 'BASIC').length;
+      const advancedDone = missions.filter((m) => m.completed && m.level === 'ADVANCED').length;
+      const freeCapReached = basicDone >= 3 && advancedDone >= 3;
+      if (freeCapReached) {
+        setView(AppView.UPGRADE);
+        return;
+      }
     }
+
     setActiveMissionId(id);
     setView(AppView.MISSION);
   };
 
   const completeMission = (id: string) => {
-    const mission = missions.find(m => m.id === id);
+    const mission = missions.find((m) => m.id === id);
     if (!mission) return;
-    const basePoints = mission.mediaType === 'TEXT' ? 50 : 150;
-    setMissions(prev => prev.map(m => m.id === id ? { ...m, completed: true } : m));
-    setMetrics(prev => ({
+    const basePoints = mission.level === 'BASIC' ? 120 : 200;
+
+    setMissions((prev) => prev.map((m) => (m.id === id ? { ...m, completed: true } : m)));
+    setMetrics((prev) => ({
       ...prev,
       labsCompleted: prev.labsCompleted + 1,
       points: prev.points + basePoints,
       trackProgress: {
         ...prev.trackProgress,
-        [mission.track]: prev.trackProgress[mission.track] + 1
+        [mission.track]: (prev.trackProgress[mission.track] || 0) + 1,
       },
-      privacy: Math.min(100, prev.privacy + 5),
-      criticalThinking: Math.min(100, prev.criticalThinking + 8),
+      criticalThinking: Math.min(100, prev.criticalThinking + 4),
+      digitalReadiness: Math.min(100, prev.digitalReadiness + 4),
     }));
-    setView(AppView.DASHBOARD);
+
+    setView(AppView.TRACKS);
     setActiveMissionId(null);
   };
 
-  const handleUpdateName = (name: string) => {
-    setMetrics(prev => ({ ...prev, operatorName: name }));
-  };
-
-  const handleActivatePathway = (track: LabTrack) => {
-    setMetrics(prev => ({ ...prev, activePathway: track }));
-  };
-
-  const handleClearPathway = () => {
-    setMetrics(prev => ({ ...prev, activePathway: 'ALL' }));
-  };
+  const handleUpdateName = (name: string) => setMetrics((prev) => ({ ...prev, operatorName: name }));
+  const handleActivatePathway = (track: LabTrack) => setMetrics((prev) => ({ ...prev, activePathway: track }));
+  const handleClearPathway = () => setMetrics((prev) => ({ ...prev, activePathway: 'ALL' }));
 
   const handleResearchComplete = (cert: UserCertificate) => {
-    setMetrics(prev => ({ 
-      ...prev, 
-      researchCompleted: true, 
+    setMetrics((prev) => ({
+      ...prev,
+      researchCompleted: true,
       points: prev.points + 500,
-      earnedCertificates: [...prev.earnedCertificates, cert]
-    }));
-  };
-
-  const handleNeuralComplete = (cert: UserCertificate) => {
-    setMetrics(prev => ({ 
-      ...prev, 
-      neuralBuilderCompleted: true, 
-      points: prev.points + 1000,
-      trackProgress: { ...prev.trackProgress, AI_ENGINEERING: (prev.trackProgress.AI_ENGINEERING || 0) + 1 },
-      earnedCertificates: [...prev.earnedCertificates, cert]
-    }));
-  };
-
-  const addQuickPoints = (pts: number, track: LabTrack) => {
-    setMetrics(prev => ({ 
-      ...prev, 
-      points: prev.points + pts,
-      trackProgress: { ...prev.trackProgress, [track]: (prev.trackProgress[track] || 0) + 0.1 }
+      earnedCertificates: [...prev.earnedCertificates, cert],
     }));
   };
 
   const handleUpgrade = (plan: 'MONTHLY' | 'ANNUAL') => {
     if (!user) {
-      alert("Error: No user session detected. Please sign in to upgrade.");
+      alert('Error: No user session detected. Please sign in to upgrade.');
       return;
     }
 
-    const base = plan === 'MONTHLY' 
-      ? "https://buy.stripe.com/cNiaEQ8AVb9q8tY5xZao800" 
-      : "https://buy.stripe.com/fZu6oA3gB91i9y23pRao801";
-      
+    const base =
+      plan === 'MONTHLY'
+        ? 'https://buy.stripe.com/cNiaEQ8AVb9q8tY5xZao800'
+        : 'https://buy.stripe.com/fZu6oA3gB91i9y23pRao801';
+
     const url =
-  `${base}?client_reference_id=${encodeURIComponent(user.uid)}` +
-  `&prefilled_email=${encodeURIComponent(user.email || "")}` +
-  `&metadata[firebaseUID]=${encodeURIComponent(user.uid)}`;
+      `${base}?client_reference_id=${encodeURIComponent(user.uid)}` +
+      `&prefilled_email=${encodeURIComponent(user.email || '')}` +
+      `&metadata[firebaseUID]=${encodeURIComponent(user.uid)}`;
 
-window.location.href = url;
-
+    window.location.href = url;
   };
 
   if (isInitializing) {
     return (
-      <div className="h-screen bg-black flex flex-col items-center justify-center font-mono text-[10px] uppercase tracking-[0.5em] text-zinc-500">
+      <div className="h-screen bg-[#0F0F0F] flex flex-col items-center justify-center text-[#A1A1A1]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border border-zinc-800 border-t-white animate-spin"></div>
-          <span className="animate-pulse">Syncing_Uplink...</span>
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#262626] border-t-[#c1121f]" />
+          <span className="text-sm tracking-wide">Syncing your workspace…</span>
         </div>
       </div>
     );
   }
 
-  if (view === AppView.TERMINAL) return <Terminal onComplete={handleTerminalComplete} />;
-  
+  const loadingFallback = (
+    <div className="flex min-h-screen items-center justify-center bg-[#0F0F0F] text-[#A1A1A1]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#262626] border-t-[#c1121f]" />
+        <span className="text-sm tracking-wide">Loading workspace…</span>
+      </div>
+    </div>
+  );
+
+  if (view === AppView.TERMINAL) {
+    return (
+      <Suspense fallback={loadingFallback}>
+        <Terminal onComplete={handleTerminalComplete} />
+      </Suspense>
+    );
+  }
   if (!user) return <AuthView onAuthSuccess={handleAuthSuccess} />;
 
-  // Gate: email/password users must verify email before using the app
-  const needsEmailVerification =
-    user?.providerData?.some((p) => p.providerId === "password") && !user.emailVerified;
+  const needsEmailVerification = user?.providerData?.some((p) => p.providerId === 'password') && !user.emailVerified;
 
   const handleResendVerification = async () => {
     try {
       if (auth.currentUser) {
         await sendEmailVerification(auth.currentUser);
-        alert("Verification email sent. Check your inbox (and spam).");
+        alert('Verification email sent. Check your inbox (and spam).');
       }
     } catch (e: any) {
-      alert(e?.message || "Failed to send verification email.");
+      alert(e?.message || 'Failed to send verification email.');
     }
   };
 
@@ -305,98 +310,82 @@ window.location.href = url;
       if (refreshed?.emailVerified) {
         setView(AppView.DASHBOARD);
       } else {
-        alert("Still not verified yet. After clicking the email link, come back and press Refresh.");
+        alert('Still not verified yet. After clicking the email link, come back and press Refresh.');
       }
     } catch (e: any) {
-      alert(e?.message || "Failed to refresh verification status.");
+      alert(e?.message || 'Failed to refresh verification status.');
     }
   };
 
   if (needsEmailVerification) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-zinc-200">
-        <div className="w-full max-w-md border border-zinc-900 bg-zinc-950 p-8 rounded-[2.5rem] space-y-6 shadow-2xl">
-          <h1 className="text-2xl font-light tracking-tight text-white">Verify your email</h1>
-          <p className="text-sm text-zinc-400 leading-relaxed">
-            We sent a verification link to <span className="text-white">{user.email}</span>.
-            Please click the link in your inbox, then come back here.
+      <div className="min-h-screen bg-[#0F0F0F] flex flex-col items-center justify-center p-6 text-[#EAEAEA]">
+        <div className="w-full max-w-md rounded-xl border border-[#262626] bg-[#171717] p-8">
+          <h1 className="text-[28px] font-semibold">Verify your email</h1>
+          <p className="mt-3 text-base text-[#A1A1A1]">
+            We sent a verification link to <span className="text-[#EAEAEA]">{user.email}</span>. Please click the link in your inbox, then return here.
           </p>
-
-          <div className="space-y-3">
-            <button
-              onClick={handleResendVerification}
-              className="w-full border border-zinc-800 text-white py-3 rounded-full text-sm tracking-widest hover:border-white hover:bg-white/5 transition-all"
-            >
-              Resend verification email
-            </button>
-
-            <button
-              onClick={handleRefreshVerification}
-              className="w-full bg-white text-black py-3 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-zinc-200 transition-all"
-            >
-              I verified — Refresh
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="w-full text-zinc-400 py-2 rounded-full text-sm hover:text-white transition-all"
-            >
-              Log out
-            </button>
+          <div className="mt-6 space-y-3">
+            <button onClick={handleResendVerification} className="w-full h-11 rounded-lg border border-[#262626] text-[#EAEAEA] text-sm hover:border-[#c1121f]">Resend verification email</button>
+            <button onClick={handleRefreshVerification} className="w-full h-11 rounded-lg bg-[#c1121f] text-white text-sm font-semibold hover:bg-[#a30f1a]">I verified — Refresh</button>
+            <button onClick={handleLogout} className="w-full h-10 rounded-lg border border-[#262626] text-[#A1A1A1] text-sm hover:text-[#EAEAEA]">Log out</button>
           </div>
-
-          <p className="text-[11px] text-zinc-600">
-            Tip: Check your spam/promotions folder. If you didn’t receive it, press “Resend”.
-          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-black text-zinc-300 font-sans selection:bg-zinc-200 selection:text-black">
-      {isSnowing && <SnowOverlay />}
-      
-      {view === AppView.SPEED_LABS ? (
-        <InfiniteSection onComplete={addQuickPoints} onExit={() => setView(AppView.DASHBOARD)} />
-      ) : view === AppView.MISSION && activeMissionId ? (
-        <MissionView mission={missions.find(m => m.id === activeMissionId)!} onExit={() => setView(AppView.DASHBOARD)} onComplete={completeMission} />
-      ) : (
-        <>
-          <Sidebar currentView={view} setView={setView} isPremium={metrics.isPremium} isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} onLogout={handleLogout} />
-          <main className={`flex-1 overflow-y-auto transition-all duration-300 ${isSidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-            {view === AppView.DASHBOARD && (
-              <Dashboard 
-                metrics={metrics} 
-                missions={missions} 
-                onSelectMission={selectMission} 
-                setView={setView} 
-                onClearPathway={handleClearPathway}
-                snowToggle={() => setIsSnowing(!isSnowing)}
-                isSnowing={isSnowing}
-                onUpdatePoints={handleUpdatePoints}
-                onUpdateName={handleUpdateName}
-              />
-            )}
-            {view === AppView.PORTFOLIO && <PortfolioView metrics={metrics} missions={missions} onUpdateName={handleUpdateName} onActivatePathway={handleActivatePathway} onSelectMission={selectMission} setView={setView} onLogout={handleLogout} />}
-            {view === AppView.LEARN && <LearnView />}
-            {view === AppView.UPGRADE && <UpgradeView onUpgrade={handleUpgrade} />}
-            {view === AppView.LAB_CREATOR && <LabCreator isPremium={metrics.isPremium} onResearchComplete={() => {}} />}
-            {view === AppView.RESEARCH && (
-  <ResearchSimulator
-    isPremium={metrics.isPremium}
-    operatorName={metrics.operatorName || ''}
-    onComplete={handleResearchComplete}
-    onUpdateOperatorName={handleUpdateName}
-    researchState={researchState}
-    setResearchState={setResearchState}
-  />
-)}
-            {view === AppView.NEURAL_BUILDER && <NeuralBuilder isPremium={metrics.isPremium} operatorName={metrics.operatorName || ''} onComplete={handleNeuralComplete} onExit={() => setView(AppView.DASHBOARD)} onUpdateOperatorName={handleUpdateName} />}
-          </main>
-        </>
-      )}
-    </div>
+    <Suspense fallback={loadingFallback}>
+      <div className="flex min-h-screen bg-[#0F0F0F] text-[#EAEAEA] selection:bg-[#c1121f] selection:text-white">
+        {isSnowing && <SnowOverlay />}
+
+        {view === AppView.MISSION && activeMissionId ? (
+          <MissionView mission={missions.find((m) => m.id === activeMissionId)!} onExit={() => setView(AppView.TRACKS)} onComplete={completeMission} />
+        ) : (
+          <>
+            <Sidebar currentView={view} setView={setView} isPremium={metrics.isPremium} isCollapsed={isSidebarCollapsed} setIsCollapsed={setIsSidebarCollapsed} onLogout={handleLogout} />
+            <main className={`flex-1 overflow-y-auto transition-all duration-200 ease-out ${isSidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
+              {view === AppView.DASHBOARD && (
+                <Dashboard metrics={metrics} missions={missions} onSelectMission={selectMission} setView={setView} onClearPathway={handleClearPathway} mode="DASHBOARD" />
+              )}
+              {view === AppView.TRACKS && (
+                <Dashboard metrics={metrics} missions={missions} onSelectMission={selectMission} setView={setView} onClearPathway={handleClearPathway} mode="TRACKS" />
+              )}
+              {(view === AppView.PORTFOLIO || view === AppView.CERTIFICATES || view === AppView.SETTINGS) && (
+                <PortfolioView
+                  metrics={metrics}
+                  missions={missions}
+                  onUpdateName={handleUpdateName}
+                  onActivatePathway={handleActivatePathway}
+                  onSelectMission={selectMission}
+                  setView={setView}
+                  onLogout={handleLogout}
+                  initialTab={
+                    view === AppView.CERTIFICATES
+                      ? PortfolioTab.CERTIFICATES
+                      : view === AppView.SETTINGS
+                      ? PortfolioTab.SETTINGS
+                      : PortfolioTab.PORTFOLIO
+                  }
+                />
+              )}
+              {view === AppView.UPGRADE && <UpgradeView onUpgrade={handleUpgrade} />}
+              {view === AppView.RESEARCH && (
+                <ResearchSimulator
+                  isPremium={metrics.isPremium}
+                  operatorName={metrics.operatorName || ''}
+                  onComplete={handleResearchComplete}
+                  onUpdateOperatorName={handleUpdateName}
+                  researchState={researchState}
+                  setResearchState={setResearchState}
+                />
+              )}
+            </main>
+          </>
+        )}
+      </div>
+    </Suspense>
   );
 };
 

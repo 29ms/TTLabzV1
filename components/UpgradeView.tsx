@@ -8,111 +8,79 @@ const UpgradeView: React.FC<UpgradeViewProps> = ({ onUpgrade }) => {
   const [billing, setBilling] = useState<'MONTHLY' | 'ANNUAL'>('ANNUAL');
 
   const features = [
-    { name: 'Mission Access', free: 'Foundational Only', pro: 'All 100+ Advanced Labs' },
-    { name: 'Speed Labs', free: 'Limited (25)', pro: 'Infinite Simulations' },
-    { name: 'Certifications', free: 'None', pro: '10 Track Certifications' },
-    { name: 'Lab Creator', free: 'Locked', pro: 'Create, Share, Deploy' },
-    { name: 'Leaderboard', free: 'Public', pro: 'Priority Verified Ranking' },
+    { name: 'Project paths', free: 'Core pathways', pro: 'Core + advanced pathways' },
+    { name: 'Project depth', free: 'Foundations and builder steps', pro: 'Extended advanced sequences' },
+    { name: 'Portfolio outputs', free: 'Basic saved outputs', pro: 'Expanded polished outputs and exports' },
+    { name: 'Research Suite', free: 'Preview only', pro: 'Full long-form workflows' },
+    { name: 'Certificates', free: 'Limited', pro: 'Advanced certificate set' },
   ];
 
   return (
-    <div className="p-12 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header className="mb-16 text-center">
-        <h1 className="text-4xl font-light mb-4 uppercase tracking-tighter">Professional Track</h1>
-        <p className="text-zinc-500 max-w-lg mx-auto leading-relaxed text-sm font-light">
-          Unlock the full curriculum of the TechTales Labs program and begin earning professional certifications.
-        </p>
-      </header>
+    <div className="min-h-screen bg-black px-6 py-10 md:px-10">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_8%,rgba(255,255,255,0.1),transparent_35%),radial-gradient(circle_at_86%_26%,rgba(59,130,246,0.16),transparent_30%)]" />
+      <div className="relative mx-auto max-w-6xl space-y-6">
+        <header className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur">
+          <p className="text-sm text-zinc-400">Upgrade</p>
+          <h1 className="mt-2 text-4xl font-semibold text-white">Go from solid portfolio to standout portfolio.</h1>
+          <p className="mt-3 max-w-3xl text-sm text-zinc-300">
+            Standard already gives meaningful value. Pro unlocks deeper project sequences, Research Suite workflows, and stronger portfolio presentation.
+          </p>
 
-      <div className="flex justify-center mb-12">
-        <div className="border border-zinc-800 p-1 flex gap-2 rounded-sm bg-zinc-900/10">
-          <button 
-            onClick={() => setBilling('MONTHLY')}
-            className={`px-8 py-2 text-[10px] font-mono uppercase tracking-widest transition-all ${billing === 'MONTHLY' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
-          >
-            Monthly Access
-          </button>
-          <button 
-            onClick={() => setBilling('ANNUAL')}
-            className={`px-8 py-2 text-[10px] font-mono uppercase tracking-widest transition-all ${billing === 'ANNUAL' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
-          >
-            Annual Program (Best Value)
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-        <div className="border border-zinc-900 p-12 opacity-50 flex flex-col justify-between">
-          <div>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-widest">Standard</p>
-            <p className="text-3xl font-light mb-8">Free</p>
-            <ul className="space-y-4 text-xs font-light text-zinc-600">
-              <li>• Access to introductory missions</li>
-              <li>• Standard Intelligence Hub dashboard</li>
-              <li>• Limited speed lab rotation</li>
-            </ul>
+          <div className="mt-5 inline-flex rounded-lg border border-white/15 bg-black/40 p-1">
+            <button
+              onClick={() => setBilling('MONTHLY')}
+              className={`h-9 rounded-md px-4 text-sm font-medium transition ${billing === 'MONTHLY' ? 'bg-white text-black' : 'text-zinc-300 hover:text-white'}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBilling('ANNUAL')}
+              className={`h-9 rounded-md px-4 text-sm font-medium transition ${billing === 'ANNUAL' ? 'bg-white text-black' : 'text-zinc-300 hover:text-white'}`}
+            >
+              Annual (best value)
+            </button>
           </div>
-        </div>
+        </header>
 
-        <div className="border border-white p-12 bg-zinc-900/10 relative flex flex-col justify-between overflow-hidden">
-          <div className="absolute top-0 right-0 bg-white text-black text-[8px] font-mono uppercase px-4 py-1.5 tracking-[0.2em]">Verified Professional</div>
-          <div>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-widest">Professional</p>
-            <div className="mb-8">
-              <p className="text-4xl font-light mb-1">
-                {billing === 'ANNUAL' ? '$5.00' : '$8.00'}
-                <span className="text-xs text-zinc-500 font-mono ml-2 uppercase">/ Month</span>
-              </p>
-              {billing === 'ANNUAL' && <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-widest mt-2">Billed as $60 per year</p>}
+        <section className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+          <article className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur">
+            <p className="text-sm text-zinc-400">TechTales Pro</p>
+            <p className="mt-3 text-4xl font-semibold text-white">{billing === 'ANNUAL' ? '$8/mo' : '$12/mo'}</p>
+            <p className="mt-1 text-sm text-zinc-400">{billing === 'ANNUAL' ? 'Billed annually' : 'Billed monthly'}</p>
+
+            <button
+              onClick={() => onUpgrade(billing)}
+              className="mt-6 h-11 w-full rounded-lg bg-white text-sm font-semibold text-black transition hover:bg-zinc-200"
+            >
+              Upgrade to Pro
+            </button>
+            <p className="mt-3 text-xs text-zinc-500">Secure checkout via Stripe. Your current auth and account stay unchanged.</p>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur">
+            <h2 className="text-xl font-semibold text-white">Standard vs Pro</h2>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead className="bg-black/60 text-zinc-400">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Feature</th>
+                    <th className="px-4 py-3 font-medium">Standard</th>
+                    <th className="px-4 py-3 font-medium">Pro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {features.map((feature) => (
+                    <tr key={feature.name} className="border-t border-white/10">
+                      <td className="px-4 py-3 text-zinc-200">{feature.name}</td>
+                      <td className="px-4 py-3 text-zinc-400">{feature.free}</td>
+                      <td className="px-4 py-3 text-zinc-100">{feature.pro}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <ul className="space-y-4 text-xs font-light mb-12">
-              <li className="flex items-center gap-3">
-                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                 Full curriculum (100+ Advanced Labs)
-              </li>
-              <li className="flex items-center gap-3">
-                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                 Professional Track Certifications
-              </li>
-              <li className="flex items-center gap-3">
-                 <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                 Unlimited Speed Lab simulation
-              </li>
-              <li className="flex items-center gap-3 text-zinc-400">
-                 <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span>
-                 Lab Creator access included
-              </li>
-            </ul>
-          </div>
-          <button 
-            onClick={() => onUpgrade(billing)}
-            className="w-full bg-white text-black py-4 font-mono text-sm uppercase tracking-widest hover:bg-zinc-200 transition-all shadow-xl"
-          >
-            Initiate Deployment
-          </button>
-        </div>
-      </div>
-
-      <div className="border-t border-zinc-900 pt-16">
-        <h3 className="text-center text-xs font-mono text-zinc-600 uppercase mb-12 tracking-[0.4em]">Feature Comparison</h3>
-        <table className="w-full text-left text-sm font-light">
-          <thead>
-            <tr className="border-b border-zinc-900 text-[10px] font-mono text-zinc-800 uppercase tracking-widest">
-              <th className="pb-6 font-normal">Sovereignty Toolset</th>
-              <th className="pb-6 font-normal">Standard</th>
-              <th className="pb-6 font-normal">Professional</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-900/50">
-            {features.map(f => (
-              <tr key={f.name} className="hover:bg-zinc-900/10 transition-colors">
-                <td className="py-6 text-zinc-300">{f.name}</td>
-                <td className="py-6 text-zinc-600">{f.free}</td>
-                <td className="py-6 text-white font-medium">{f.pro}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          </article>
+        </section>
       </div>
     </div>
   );

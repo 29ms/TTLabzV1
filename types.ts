@@ -1,31 +1,25 @@
 export enum AppView {
   TERMINAL = 'TERMINAL',
   DASHBOARD = 'DASHBOARD',
+  TRACKS = 'TRACKS',
   MISSION = 'MISSION',
   PORTFOLIO = 'PORTFOLIO',
+  CERTIFICATES = 'CERTIFICATES',
+  SETTINGS = 'SETTINGS',
   LEARN = 'LEARN',
-  SPEED_LABS = 'SPEED_LABS',
   UPGRADE = 'UPGRADE',
-  LAB_CREATOR = 'LAB_CREATOR',
-  RESEARCH = 'RESEARCH',
-  NEURAL_BUILDER = 'NEURAL_BUILDER'
+  RESEARCH = 'RESEARCH'
 }
 
-export enum DashboardSubView {
-  INTEL_HUB = 'INTEL_HUB',
-  VIRTUAL_SOC = 'VIRTUAL_SOC',
-  NEURAL_OPS = 'NEURAL_OPS'
-}
 
 export enum PortfolioTab {
-  CERTIFICATIONS = 'CERTIFICATIONS',
-  PROFILE = 'PROFILE',
-  ACCOUNT = 'ACCOUNT',
+  PORTFOLIO = 'PORTFOLIO',
+  CERTIFICATES = 'CERTIFICATES',
   SETTINGS = 'SETTINGS'
 }
-
-export type LabTrack = 'SOVEREIGNTY' | 'DEFENDER' | 'EXECUTIVE' | 'INTEL' | 'ETHICS' | 'AI_ENGINEERING' | 'LIFE';
+export type LabTrack = 'ETHICS' | 'DEFENDER' | 'EXECUTIVE' | 'INTEL';
 export type MediaType = 'TEXT' | 'IMAGE' | 'VIDEO';
+export type ModuleLevel = 'BASIC' | 'ADVANCED';
 
 export interface UserCertificate {
   id: string;
@@ -67,6 +61,9 @@ export interface Mission {
   completed: boolean;
   premium: boolean;
   mediaType: MediaType;
+  level: ModuleLevel;
+  estimatedMinutes: number;
+  tags: string[];
 }
 
 export interface Certification {
@@ -99,7 +96,6 @@ export interface BlogPost {
   pubDate?: string;
 }
 
-// New Research Builder Types
 export interface ResearchSection {
   id: string;
   title: string;

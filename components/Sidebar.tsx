@@ -17,6 +17,14 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
     { label: 'Learning Library', view: AppView.LEARN, icon: '⚯' },
   ];
 
+const navItems = [
+  { label: 'Dashboard', view: AppView.DASHBOARD, icon: icons.dashboard, activeViews: [AppView.DASHBOARD] },
+  { label: 'Projects', view: AppView.TRACKS, icon: icons.projects, activeViews: [AppView.TRACKS, AppView.MISSION] },
+  { label: 'Portfolio', view: AppView.PORTFOLIO, icon: icons.portfolio, activeViews: [AppView.PORTFOLIO, AppView.CERTIFICATES] },
+  { label: 'Settings', view: AppView.SETTINGS, icon: icons.settings, activeViews: [AppView.SETTINGS] },
+];
+
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCollapsed, setIsCollapsed, onLogout }) => {
   return (
     <aside className={`border-r border-zinc-800/60 fixed top-0 left-0 h-screen bg-zinc-950/95 backdrop-blur z-50 transition-all duration-200 ease-out ${isCollapsed ? 'w-16' : 'w-72'}`}>
       <div className={`p-6 flex items-center justify-between ${isCollapsed ? 'px-4' : ''}`}>
@@ -31,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
           className="text-zinc-500 hover:text-white text-xl p-1 transition-colors duration-200 ease-out"
           title={isCollapsed ? 'Expand Navigation' : 'Collapse Navigation'}
         >
-          {isCollapsed ? '»' : '«'}
+          {isCollapsed ? '>' : '<'}
         </button>
       </div>
 
