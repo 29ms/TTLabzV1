@@ -88,7 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCo
       </div>
 
       <div className={`absolute bottom-0 w-full border-t border-white/10 p-4 ${isCollapsed ? 'px-2' : ''}`}>
-        {!isPremium && !isCollapsed && (
+        {!isPremium && !isCollapsed && currentView !== AppView.DASHBOARD && (
           <button
             onClick={() => setView(AppView.UPGRADE)}
             className="mb-3 h-10 w-full rounded-lg border border-blue-300/40 bg-blue-400/10 text-sm font-medium text-blue-100 transition hover:border-blue-200"
