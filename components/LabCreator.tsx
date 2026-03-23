@@ -15,7 +15,7 @@ const LabCreator: React.FC<LabCreatorProps> = ({ isPremium }) => {
   
   const [formData, setFormData] = useState({
     title: '',
-    track: 'SOVEREIGNTY' as LabTrack,
+    track: 'ETHICS' as LabTrack,
     difficulty: 'INTERMEDIATE' as LabDifficulty,
     mediaType: 'TEXT' as MediaType,
     scenario: '',
@@ -44,7 +44,7 @@ const LabCreator: React.FC<LabCreatorProps> = ({ isPremium }) => {
       id: `private-${Date.now()}`,
       title: formData.title,
       track: formData.track,
-      category: 'TEXT_ANALYSIS', 
+      category: 'TEXT_ANALYSIS',
       difficulty: formData.difficulty,
       description: formData.scenario.substring(0, 80) + '...',
       scenario: formData.scenario,
@@ -52,6 +52,9 @@ const LabCreator: React.FC<LabCreatorProps> = ({ isPremium }) => {
       completed: false,
       premium: false,
       mediaType: formData.mediaType,
+      level: formData.difficulty === 'ADVANCED' ? 'ADVANCED' : 'BASIC',
+      estimatedMinutes: formData.difficulty === 'ADVANCED' ? 40 : 25,
+      tags: [formData.track, formData.mediaType],
     };
 
     const updatedLabs = [newMission, ...createdLabs];
@@ -61,7 +64,7 @@ const LabCreator: React.FC<LabCreatorProps> = ({ isPremium }) => {
     alert('Deployment Successful: Lab added to Private Archive.');
     setFormData({
       title: '',
-      track: 'SOVEREIGNTY',
+      track: 'ETHICS',
       difficulty: 'INTERMEDIATE',
       mediaType: 'TEXT',
       scenario: '',
@@ -141,7 +144,7 @@ const LabCreator: React.FC<LabCreatorProps> = ({ isPremium }) => {
                       value={formData.track}
                       onChange={e => setFormData({...formData, track: e.target.value as any})}
                     >
-                      {['SOVEREIGNTY', 'DEFENDER', 'EXECUTIVE', 'INTEL', 'ETHICS', 'LIFE'].map(t => <option key={t} value={t}>{t}</option>)}
+                      {(['ETHICS', 'DEFENDER', 'EXECUTIVE', 'INTEL'] as LabTrack[]).map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div className="space-y-4">

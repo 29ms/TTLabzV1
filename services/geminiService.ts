@@ -1,6 +1,7 @@
-import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
-import { Mission, LabTrack, LabCategory, LabDifficulty, MediaType, QuickScenario, SubmissionPlatform } from "../types";
 import { GoogleGenAI } from "@google/genai";
+import type { GenerateContentResponse } from "@google/genai";
+import { Type } from "@google/genai";
+import { QuickScenario, SubmissionPlatform, LabTrack, Mission } from "../types";
 
 // ===== SIMPLE DAILY LIMIT (LAUNCH SAFETY) =====
 const DAILY_LIMIT = 20;
@@ -234,7 +235,7 @@ const trackConstraint = track === 'ALL' ? 'any topic' : `the ${track} topic`;
       return {
         id: `fb-${Date.now()}`,
         prompt: "A random person DMs you for your password. Is it safe to give it?",
-        track: "LIFE",
+        track: "ETHICS",
         correctAnswer: false,
         explanation: "Never share passwords with strangers!"
       };

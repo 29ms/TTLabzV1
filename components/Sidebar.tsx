@@ -10,117 +10,90 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCollapsed, setIsCollapsed, onLogout }) => {
-  const menuItems = [
-    { label: 'Labs', view: AppView.DASHBOARD, icon: '◈' },
-    { label: 'Speed Labs', view: AppView.SPEED_LABS, icon: 'ϟ' }, 
-    { label: 'Portfolio', view: AppView.PORTFOLIO, icon: '▣' },
-    { label: 'Learn', view: AppView.LEARN, icon: '⚯' }, // Technical Nodes/Intelligence icon
-  ];
+const iconProps = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
+const icons = {
+  dashboard: <svg {...iconProps}><path d="M3 13h8V3H3z"/><path d="M13 21h8v-6h-8z"/><path d="M13 3h8v6h-8z"/><path d="M3 21h8v-4H3z"/></svg>,
+  projects: <svg {...iconProps}><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h13"/><circle cx="18" cy="12" r="2"/></svg>,
+  portfolio: <svg {...iconProps}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>,
+  settings: <svg {...iconProps}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+};
+
+const navItems = [
+  { label: 'Dashboard', view: AppView.DASHBOARD, icon: icons.dashboard, activeViews: [AppView.DASHBOARD] },
+  { label: 'Projects', view: AppView.TRACKS, icon: icons.projects, activeViews: [AppView.TRACKS, AppView.MISSION] },
+  { label: 'Portfolio', view: AppView.PORTFOLIO, icon: icons.portfolio, activeViews: [AppView.PORTFOLIO, AppView.CERTIFICATES] },
+  { label: 'Settings', view: AppView.SETTINGS, icon: icons.settings, activeViews: [AppView.SETTINGS] },
+];
+
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isPremium, isCollapsed, setIsCollapsed, onLogout }) => {
   return (
-    <div className={`border-r border-zinc-800/40 flex flex-col h-screen fixed top-0 left-0 bg-black/95 backdrop-blur-md z-50 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'}`}>
-      <div className={`p-8 cursor-pointer flex items-center justify-between ${isCollapsed ? 'px-4' : ''}`} onClick={() => setView(AppView.DASHBOARD)}>
+    <aside className={`fixed left-0 top-0 z-50 h-screen border-r border-[#262626] bg-[#121215] transition-all duration-200 ease-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
+      <div className={`flex items-center justify-between border-b border-[#262626] p-6 ${isCollapsed ? 'px-4' : ''}`}>
         {!isCollapsed && (
-          <div className="animate-in fade-in duration-300">
-            <h1 className="text-sm font-bold tracking-[0.25em] mb-1 text-zinc-200 uppercase">TechTales Labs</h1>
-            <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">Operator Console</p>
+          <div>
+            <h1 className="text-[20px] font-semibold text-[#EAEAEA]">TechTales</h1>
+            <p className="mt-1 text-sm text-[#A1A1A1]">Project engineering platform</p>
           </div>
         )}
-        <button 
-          onClick={(e) => { e.stopPropagation(); setIsCollapsed(!isCollapsed); }} 
-          className="text-zinc-500 hover:text-white transition-colors text-xl font-mono p-1"
-          title={isCollapsed ? "Expand Navigation" : "Collapse Navigation"}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="h-8 w-8 rounded-lg border border-[#262626] text-sm text-[#A1A1A1] transition-all duration-200 ease-out hover:border-[#c1121f] hover:text-[#EAEAEA]"
+          aria-label="Toggle sidebar"
         >
-          {isCollapsed ? '»' : '«'}
+          {isCollapsed ? '>' : '<'}
         </button>
       </div>
 
-      <nav className="flex-1 mt-8">
-        {menuItems.map((item) => (
+      <div className="p-4">
+        {!isCollapsed && (
           <button
-            key={item.label}
-            onClick={() => setView(item.view)}
-            title={isCollapsed ? item.label : ''}
-            className={`w-full text-left flex items-center gap-4 transition-all duration-200 ${
-              currentView === item.view 
-                ? 'text-white border-l-2 border-white bg-zinc-900/60' 
-                : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-900/20'
-            } ${isCollapsed ? 'px-4 py-4 justify-center' : 'px-8 py-4'}`}
+            onClick={() => setView(AppView.TRACKS)}
+            className="mb-4 h-11 w-full rounded-xl bg-[#c1121f] text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-[#a30f1a]"
           >
-            <span className={`text-xl font-mono transition-colors ${currentView === item.view ? 'text-white' : 'text-zinc-600'}`}>
-              {item.icon}
-            </span>
-            {!isCollapsed && <span className="text-[10px] font-mono uppercase tracking-[0.2em]">{item.label}</span>}
+            Browse projects
           </button>
-        ))}
-        
-        <div className="my-4 border-t border-zinc-900/50" />
+        )}
 
-        <button
-          onClick={() => isPremium ? setView(AppView.LAB_CREATOR) : setView(AppView.UPGRADE)}
-          title={isCollapsed ? 'Lab Creator' : ''}
-          className={`w-full text-left flex items-center gap-4 transition-all duration-200 ${
-            currentView === AppView.LAB_CREATOR 
-              ? 'text-white border-l-2 border-white bg-zinc-900/60' 
-              : 'text-zinc-500 hover:text-white'
-          } ${isCollapsed ? 'px-4 py-4 justify-center' : 'px-8 py-4'} group`}
-        >
-          <span className={`text-xl font-mono transition-colors ${currentView === AppView.LAB_CREATOR ? 'text-white' : 'text-zinc-600'}`}>✢</span>
-          {!isCollapsed && (
-            <div className="flex-1 flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em]">Lab Creator</span>
-              {!isPremium && <span className="text-[8px] border border-zinc-600 px-1 text-zinc-500">PRO</span>}
-            </div>
-          )}
-        </button>
+        <nav className="space-y-2">
+          {navItems.map((item) => {
+            const isActive = item.activeViews.includes(currentView);
+            return (
+              <button
+                key={item.label}
+                onClick={() => setView(item.view)}
+                title={isCollapsed ? item.label : ''}
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${isCollapsed ? 'justify-center' : ''} ${
+                  isActive
+                    ? 'border border-[#c1121f]/50 bg-[#c1121f]/10 text-[#EAEAEA]'
+                    : 'border border-transparent text-[#A1A1A1] hover:border-[#262626] hover:bg-[#1F1F1F] hover:text-[#EAEAEA]'
+                }`}
+              >
+                {item.icon}
+                {!isCollapsed && <span>{item.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
-        <button
-          onClick={() => isPremium ? setView(AppView.RESEARCH) : setView(AppView.UPGRADE)}
-          title={isCollapsed ? 'Research Simulator' : ''}
-          className={`w-full text-left flex items-center gap-4 transition-all duration-200 ${
-            currentView === AppView.RESEARCH 
-              ? 'text-white border-l-2 border-white bg-zinc-900/60' 
-              : 'text-zinc-500 hover:text-white'
-          } ${isCollapsed ? 'px-4 py-4 justify-center' : 'px-8 py-4'} group`}
-        >
-          <span className={`text-xl font-mono transition-colors ${currentView === AppView.RESEARCH ? 'text-white' : 'text-zinc-600'}`}>⌬</span>
-          {!isCollapsed && (
-            <div className="flex-1 flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase tracking-[0.2em]">Research Suite</span>
-              {!isPremium && <span className="text-[8px] border border-zinc-600 px-1 text-zinc-500">PRO</span>}
-            </div>
-          )}
-        </button>
-      </nav>
-
-      <div className={`p-8 ${isCollapsed ? 'px-4' : ''}`}>
+      <div className={`absolute bottom-0 w-full border-t border-[#262626] p-4 ${isCollapsed ? 'px-2' : ''}`}>
         {!isPremium && !isCollapsed && (
           <button
             onClick={() => setView(AppView.UPGRADE)}
-            className="w-full mb-6 border border-zinc-800 py-3 text-[10px] font-mono uppercase tracking-[0.2em] hover:bg-zinc-200 hover:text-black transition-all text-zinc-400 hover:border-zinc-200"
+            className="mb-3 h-10 w-full rounded-lg border border-[#c1121f]/40 bg-[#c1121f]/10 text-sm font-medium text-[#fecaca] transition-all duration-200 ease-out hover:border-[#c1121f]"
           >
-            Unlock Pro
+            Unlock all projects
           </button>
         )}
-        
-        <button 
+        <button
           onClick={onLogout}
-          className="w-full mb-4 text-left group flex items-center gap-4"
+          className="h-10 w-full rounded-lg border border-[#262626] text-sm text-[#A1A1A1] transition-all duration-200 ease-out hover:border-[#c1121f] hover:text-[#EAEAEA]"
         >
-          <span className="text-xl font-mono text-zinc-700 group-hover:text-white transition-colors">⏻</span>
-          {!isCollapsed && <span className="text-[9px] font-mono text-zinc-600 group-hover:text-zinc-300 uppercase tracking-widest transition-colors">Terminate_Session</span>}
+          Log out
         </button>
-
-        <div className={`border border-zinc-800 p-4 rounded-sm transition-all duration-300 ${isCollapsed ? 'p-2 border-none' : ''}`}>
-          {!isCollapsed && <p className="text-[10px] font-mono text-zinc-500 uppercase mb-2 tracking-widest">Operator</p>}
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isPremium ? 'bg-zinc-300' : 'bg-zinc-700'} animate-pulse`} />
-            {!isCollapsed && <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-tighter font-light">{isPremium ? 'PROFESSIONAL' : 'STANDARD'}</span>}
-          </div>
-        </div>
       </div>
-    </div>
+    </aside>
   );
 };
 

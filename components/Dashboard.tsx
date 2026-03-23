@@ -1,8 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
-import { UserMetrics, Mission, AppView, LabTrack, DashboardSubView } from '../types';
-import VirtualSOC from './VirtualSOC';
-import NeuralBuilder from './NeuralBuilder';
+import React, { useMemo, useState } from 'react';
+import { AppView, LabTrack, Mission, UserMetrics } from '../types';
 
 interface DashboardProps {
   metrics: UserMetrics;
@@ -10,173 +7,265 @@ interface DashboardProps {
   onSelectMission: (id: string) => void;
   setView: (view: AppView) => void;
   onClearPathway: () => void;
-  snowToggle: () => void;
-  isSnowing: boolean;
-  onUpdatePoints: (pts: number) => void;
-  // Added onUpdateName to satisfy NeuralBuilderProps requirements
-  onUpdateName: (name: string) => void;
+  mode?: 'DASHBOARD' | 'TRACKS';
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ 
-  metrics, missions, onSelectMission, setView, onClearPathway, snowToggle, isSnowing, onUpdatePoints, onUpdateName 
-}) => {
+const trackMeta: Record<LabTrack, { label: string; summary: string; image: string }> = {
+  ETHICS: {
+    label: 'Artificial Intelligence',
+    summary: 'Model evaluation, prompt systems, and decision-ready AI reports.',
+    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80',
+  },
+  DEFENDER: {
+    label: 'Cybersecurity',
+    summary: 'Threat analysis, secure architecture, and real defense strategy.',
+    image: 'https://images.unsplash.com/photo-1510511459019-5dda7724fd87?auto=format&fit=crop&w=1200&q=80',
+  },
+  EXECUTIVE: {
+    label: 'Coding Systems',
+    summary: 'Software builds with planning, implementation, and clean execution.',
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
+  },
+  INTEL: {
+    label: 'Robotics',
+    summary: 'Automation systems, embedded logic, and prototype development.',
+    image: 'https://images.unsplash.com/photo-1535378917042-10a22c95931a?auto=format&fit=crop&w=1200&q=80',
+  },
+};
+
+const trackList = Object.keys(trackMeta) as LabTrack[];
+const accent = '#c1121f';
+const accentDark = '#a30f1a';
+
+const Dashboard: React.FC<DashboardProps> = ({ metrics, missions, onSelectMission, setView, onClearPathway, mode = 'DASHBOARD' }) => {
   const [selectedTrack, setSelectedTrack] = useState<LabTrack | 'ALL'>(metrics.activePathway || 'ALL');
-  const [subView, setSubView] = useState<DashboardSubView>(DashboardSubView.INTEL_HUB);
+  const [viewFilter, setViewFilter] = useState<'ALL' | 'BASIC' | 'ADVANCED'>('ALL');
 
-  useEffect(() => {
-    if (metrics.activePathway) setSelectedTrack(metrics.activePathway);
-  }, [metrics.activePathway]);
+  const filtered = useMemo(() => {
+    const byTrack = selectedTrack === 'ALL' ? missions : missions.filter((mission) => mission.track === selectedTrack);
+    if (viewFilter === 'ALL') return byTrack;
+    return byTrack.filter((mission) => mission.level === viewFilter);
+  }, [missions, selectedTrack, viewFilter]);
 
-  const tracks: { id: LabTrack; label: string }[] = [
-    { id: 'LIFE', label: 'Real Life Safety' },
-    { id: 'SOVEREIGNTY', label: 'Digital Footprint' },
-    { id: 'DEFENDER', label: 'Security Analyst' },
-    { id: 'EXECUTIVE', label: 'Tech Leadership' },
-    { id: 'INTEL', label: 'OSINT Intelligence' },
-    { id: 'ETHICS', label: 'AI & Society' },
-  ];
+  const completedModules = missions.filter((mission) => mission.completed);
+  const activeModules = missions.filter((mission) => !mission.completed).slice(0, 3);
+  const nextModule = activeModules[0] || missions[0];
+  const completionRate = missions.length ? Math.round((completedModules.length / missions.length) * 100) : 0;
 
-  const filteredMissions = selectedTrack === 'ALL' 
-    ? missions 
-    : missions.filter(m => m.track === selectedTrack);
-
-  return (
-    <div className="p-8 md:p-12 animate-in fade-in duration-1000 pb-32 h-screen flex flex-col overflow-hidden">
-      <header className="mb-8 border-b border-zinc-900 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-8 shrink-0">
-        <div>
-          <div className="flex items-center gap-4 mb-3">
-            <h1 className="text-4xl font-light tracking-tighter uppercase text-zinc-100">Intelligence_Ops</h1>
-            {selectedTrack !== 'ALL' && subView === DashboardSubView.INTEL_HUB && (
-              <button 
-                onClick={() => { onClearPathway(); setSelectedTrack('ALL'); }}
-                className="text-[9px] font-mono text-zinc-400 hover:text-zinc-100 uppercase border border-zinc-800 px-3 py-1 tracking-widest transition-all"
-              >
-                Clear_Filter [x]
-              </button>
-            )}
-          </div>
-          <div className="flex gap-8 items-center">
-            <p className="text-zinc-400 font-mono text-[10px] uppercase tracking-widest">
-              {metrics.labsCompleted} VERIFIED / {metrics.points.toLocaleString()} POINTS
-            </p>
-            <div className="h-[1px] w-8 bg-zinc-800" />
-            <button 
-              onClick={snowToggle}
-              className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-colors ${isSnowing ? 'text-white' : 'text-zinc-700 hover:text-zinc-300'}`}
-            >
-              [ {isSnowing ? 'DISABLE_SNOW' : 'ENABLE_SNOW'} ]
-            </button>
-          </div>
-        </div>
-
-        <nav className="flex bg-zinc-950 border border-zinc-900 p-1">
-          {[
-            { id: DashboardSubView.INTEL_HUB, label: 'Intel_Hub' },
-            { id: DashboardSubView.VIRTUAL_SOC, label: 'Security_SOC' },
-            { id: DashboardSubView.NEURAL_OPS, label: 'Intelligence_Lab' }
-          ].map(view => (
-            <button
-              key={view.id}
-              onClick={() => setSubView(view.id)}
-              className={`px-6 py-3 text-[10px] font-mono uppercase tracking-widest transition-all relative ${subView === view.id ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-100'}`}
-            >
-              {view.label}
-              {view.id === DashboardSubView.NEURAL_OPS && !metrics.isPremium && (
-                <span className="ml-2 text-[8px] bg-zinc-800 text-zinc-400 px-1 py-0.5 rounded-sm">LOCKED</span>
-              )}
-            </button>
-          ))}
-        </nav>
-      </header>
-
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {subView === DashboardSubView.INTEL_HUB && (
-          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
-            <div className="flex flex-wrap gap-4 mb-8">
-              <button 
-                onClick={() => { onClearPathway(); setSelectedTrack('ALL'); }}
-                className={`text-[10px] font-mono px-4 py-2 border transition-all ${selectedTrack === 'ALL' ? 'bg-zinc-800 text-zinc-100 border-zinc-600 shadow-inner' : 'border-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}`}
-              >
-                ALL_MODULES
-              </button>
-              {tracks.map(t => (
-                <button 
-                  key={t.id}
-                  onClick={() => setSelectedTrack(t.id)}
-                  className={`text-[10px] font-mono px-4 py-2 border transition-all ${selectedTrack === t.id ? 'bg-zinc-800 text-zinc-100 border-zinc-600 shadow-inner' : 'border-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'}`}
-                >
-                  {t.id}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-              {filteredMissions.map((mission) => (
+  if (mode === 'DASHBOARD') {
+    return (
+      <div className="min-h-screen bg-[#0b0b0d] px-6 py-8 text-[#EAEAEA] md:px-10">
+        <div className="space-y-6">
+          <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <article className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
+              <p className="text-sm uppercase tracking-[0.28em] text-[#fca5a5]">Dashboard</p>
+              <h1 className="mt-4 text-[40px] font-semibold leading-tight text-white">Your next impressive project is ready.</h1>
+              <p className="mt-4 max-w-2xl text-base leading-8 text-zinc-300">
+                Build advanced portfolio work step by step, then take it further in the Project Development Lab.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
                 <button
-                  key={mission.id}
-                  onClick={() => onSelectMission(mission.id)}
-                  className={`text-left border border-zinc-900 p-10 hover:bg-zinc-900/20 transition-all duration-700 group flex flex-col justify-between h-[300px] ${mission.completed ? 'opacity-30' : ''}`}
+                  onClick={() => (nextModule ? onSelectMission(nextModule.id) : setView(AppView.TRACKS))}
+                  className="h-12 rounded-full bg-[#c1121f] px-6 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-[#a30f1a]"
                 >
-                  <div>
-                    <div className="flex justify-between items-start mb-10">
-                      <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest group-hover:text-zinc-300 transition-colors">[{mission.track}]</span>
-                      {mission.premium && !metrics.isPremium && (
-                         <span className="text-[8px] font-mono uppercase bg-zinc-900 border border-zinc-800 px-3 py-1 text-zinc-400">PRO_ACCESS</span>
-                      )}
-                    </div>
-                    <h3 className="text-2xl font-light mb-4 group-hover:tracking-tight transition-all text-zinc-100 uppercase leading-tight">{mission.title}</h3>
-                    <p className="text-zinc-400 text-[13px] leading-relaxed line-clamp-2 font-light">{mission.description}</p>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-zinc-500 group-hover:text-zinc-100 transition-all pt-6 border-t border-zinc-800">
-                    <span>{mission.completed ? 'VERIFIED' : 'INITIATE'}</span>
-                    <span className="opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">→</span>
-                  </div>
+                  Continue current project
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {subView === DashboardSubView.VIRTUAL_SOC && <VirtualSOC onUpdatePoints={onUpdatePoints} />}
-        
-        {subView === DashboardSubView.NEURAL_OPS && (
-          <div className="h-full">
-            {!metrics.isPremium ? (
-              <div className="flex flex-col items-center justify-center h-[500px] text-center space-y-8 animate-in zoom-in-95 duration-700">
-                <div className="w-20 h-20 border border-zinc-800 flex items-center justify-center text-4xl text-zinc-600">✢</div>
-                <div className="space-y-3">
-                  <h2 className="text-3xl font-light text-zinc-100 uppercase tracking-tighter">Intelligence Lab Locked</h2>
-                  <p className="text-zinc-400 text-sm max-w-md mx-auto leading-relaxed">
-                    The advanced Red Team and Blue Team technical training modules are exclusive to Professional Grade operatives.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setView(AppView.UPGRADE)}
-                  className="bg-zinc-100 text-black px-12 py-4 font-mono text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl"
+                <button
+                  onClick={() => setView(AppView.TRACKS)}
+                  className="h-12 rounded-full border border-white/10 px-6 text-sm font-medium text-white transition-all duration-200 ease-out hover:border-[#c1121f] hover:bg-white/[0.04]"
                 >
-                  Unlock Access
+                  Browse projects
                 </button>
               </div>
-            ) : (
-              <NeuralBuilder 
-                isPremium={metrics.isPremium} 
-                // Fix: Added missing operatorName and onUpdateOperatorName properties
-                operatorName={metrics.operatorName || ''}
-                onUpdateOperatorName={onUpdateName}
-                onComplete={() => {
-                  onUpdatePoints(500); 
-                }} 
-                onExit={() => setSubView(DashboardSubView.INTEL_HUB)} 
-              />
-            )}
-          </div>
-        )}
+            </article>
+
+            <article className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#121215]">
+              <div className="relative h-full min-h-[280px] bg-cover bg-center" style={{ backgroundImage: `url('${trackMeta[nextModule?.track || 'ETHICS'].image}')` }}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/5" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <p className="text-xs uppercase tracking-[0.28em] text-[#fecaca]">Continue building</p>
+                  <h2 className="mt-3 text-3xl font-semibold text-white">{nextModule?.title || 'Choose your first project'}</h2>
+                  <p className="mt-3 text-sm leading-7 text-zinc-200">{nextModule?.description || 'Open the project browser to begin.'}</p>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+            {[
+              ['My Projects', `${activeModules.length} active`],
+              ['Completed Projects', `${completedModules.length}`],
+              ['Portfolio Progress', `${completionRate}%`],
+              ['Current Tier', metrics.isPremium ? 'Pro' : 'Starter'],
+            ].map(([label, value]) => (
+              <article key={label} className="rounded-[1.5rem] border border-white/10 bg-[#121215] p-6">
+                <p className="text-sm text-zinc-400">{label}</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
+              </article>
+            ))}
+          </section>
+
+          <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <article className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">My projects</p>
+                  <h2 className="mt-3 text-3xl font-semibold text-white">Work already in motion</h2>
+                </div>
+                <button
+                  onClick={() => setView(AppView.TRACKS)}
+                  className="h-11 rounded-full border border-white/10 px-5 text-sm font-medium text-white transition-all duration-200 ease-out hover:border-[#c1121f]"
+                >
+                  View all
+                </button>
+              </div>
+              <div className="mt-6 space-y-4">
+                {activeModules.map((module, index) => (
+                  <button
+                    key={module.id}
+                    onClick={() => onSelectMission(module.id)}
+                    className="flex w-full items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.03] px-5 py-5 text-left transition-all duration-200 ease-out hover:border-[#c1121f]/45 hover:bg-white/[0.05]"
+                  >
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-[#fca5a5]">Project {index + 1}</p>
+                      <p className="mt-2 text-xl font-semibold text-white">{module.title}</p>
+                      <p className="mt-2 text-sm text-zinc-400">{trackMeta[module.track].label}</p>
+                    </div>
+                    <span className="rounded-full bg-[#c1121f] px-4 py-2 text-xs font-semibold text-white">Continue</span>
+                  </button>
+                ))}
+              </div>
+            </article>
+
+            <article className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
+              <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">Browse projects</p>
+              <h2 className="mt-3 text-3xl font-semibold text-white">Four ambitious tracks</h2>
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                {trackList.map((track) => (
+                  <button
+                    key={track}
+                    onClick={() => {
+                      setSelectedTrack(track);
+                      setView(AppView.TRACKS);
+                    }}
+                    className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03] text-left transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[#c1121f]/45"
+                  >
+                    <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url('${trackMeta[track].image}')` }} />
+                    <div className="p-5">
+                      <p className="text-lg font-semibold text-white">{trackMeta[track].label}</p>
+                      <p className="mt-2 text-sm leading-7 text-zinc-400">{trackMeta[track].summary}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </article>
+          </section>
+        </div>
       </div>
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
-      `}</style>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0b0b0d] px-6 py-8 text-[#EAEAEA] md:px-10">
+      <div className="space-y-6">
+        <section className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">Projects</p>
+              <h1 className="mt-3 text-[40px] font-semibold leading-tight text-white">Browse high-end project builds</h1>
+              <p className="mt-4 max-w-3xl text-base leading-8 text-zinc-300">
+                Choose a track, start with a guided builder, then continue into the Project Development Lab for a stronger final result.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedTrack('ALL');
+                setViewFilter('ALL');
+                onClearPathway();
+              }}
+              className="h-11 rounded-full border border-white/10 px-5 text-sm font-medium text-white transition-all duration-200 ease-out hover:border-[#c1121f]"
+            >
+              Clear filters
+            </button>
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-4">
+          {trackList.map((track) => {
+            const active = selectedTrack === track;
+            return (
+              <button
+                key={track}
+                onClick={() => setSelectedTrack(track)}
+                className={`overflow-hidden rounded-[1.7rem] border text-left transition-all duration-200 ease-out ${active ? 'border-[#c1121f]/50 bg-[#c1121f]/10' : 'border-white/10 bg-[#121215] hover:border-[#c1121f]/35'}`}
+              >
+                <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${trackMeta[track].image}')` }} />
+                <div className="p-5">
+                  <p className="text-lg font-semibold text-white">{trackMeta[track].label}</p>
+                  <p className="mt-2 text-sm leading-7 text-zinc-400">{trackMeta[track].summary}</p>
+                </div>
+              </button>
+            );
+          })}
+        </section>
+
+        <section className="flex flex-wrap gap-3">
+          {(['ALL', 'BASIC', 'ADVANCED'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setViewFilter(filter)}
+              className={`h-10 rounded-full px-5 text-sm font-medium transition-all duration-200 ease-out ${viewFilter === filter ? 'bg-[#c1121f] text-white' : 'border border-white/10 text-white hover:border-[#c1121f]'}`}
+            >
+              {filter === 'ALL' ? 'All projects' : filter === 'BASIC' ? 'Basic projects' : 'Advanced projects'}
+            </button>
+          ))}
+        </section>
+
+        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((module, index) => {
+            const track = trackMeta[module.track];
+            const locked = module.premium && !metrics.isPremium;
+            return (
+              <article key={module.id} className="overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#121215] transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[#c1121f]/35">
+                <div className="relative h-48 bg-cover bg-center" style={{ backgroundImage: `url('${track.image}')` }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                  <div className="absolute left-4 top-4 flex gap-2">
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">{module.level}</span>
+                    {locked ? (
+                      <span className="rounded-full bg-[#c1121f] px-3 py-1 text-xs font-semibold text-white">Premium</span>
+                    ) : index === 0 && module.level === 'BASIC' ? (
+                      <span className="rounded-full bg-[#166534] px-3 py-1 text-xs font-semibold text-white">Starter access</span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="p-6">
+                  <p className="text-sm text-zinc-400">{track.label}</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-white">{module.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-zinc-400">{module.description}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {module.tags.map((tag) => (
+                      <span key={tag} className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-300">{tag}</span>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">Estimated time</p>
+                      <p className="mt-1 text-sm text-white">{module.estimatedMinutes} min</p>
+                    </div>
+                    <button
+                      onClick={() => onSelectMission(module.id)}
+                      className="h-10 rounded-full px-5 text-sm font-semibold text-white transition-all duration-200 ease-out"
+                      style={{ backgroundColor: locked ? '#3f3f46' : accent }}
+                    >
+                      {module.completed ? 'Reopen' : locked ? 'Preview' : 'Start build'}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      </div>
     </div>
   );
 };
