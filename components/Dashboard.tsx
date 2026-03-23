@@ -7,16 +7,13 @@ interface DashboardProps {
   onSelectMission: (id: string) => void;
   setView: (view: AppView) => void;
   onClearPathway: () => void;
-  snowToggle: () => void;
-  isSnowing: boolean;
-  onUpdatePoints: (pts: number) => void;
-  onUpdateName: (name: string) => void;
+  mode?: 'HOME' | 'PROJECTS';
 }
 
 const paths: { id: LabTrack; title: string; level: string; output: string }[] = [
   { id: 'ETHICS', title: 'AI Projects', level: 'Foundations → Builder → Advanced', output: 'Technical brief' },
-  { id: 'DEFENDER', title: 'Cybersecurity Projects', level: 'Foundations → Builder → Advanced', output: 'Security audit' },
-  { id: 'EXECUTIVE', title: 'Coding Projects', level: 'Foundations → Builder → Advanced', output: 'Prototype report' },
+  { id: 'DEFENDER', title: 'Cybersecurity Projects', level: 'Foundations → Builder → Advanced', output: 'Security audit report' },
+  { id: 'EXECUTIVE', title: 'Coding Projects', level: 'Foundations → Builder → Advanced', output: 'Prototype case study' },
   { id: 'INTEL', title: 'Advanced Projects', level: 'Builder → Advanced', output: 'Research output' },
 ];
 
@@ -32,7 +29,7 @@ const trackLabel: Record<LabTrack, string> = {
 
 const allowedTracks = new Set<LabTrack>(['ETHICS', 'DEFENDER', 'EXECUTIVE', 'INTEL', 'AI_ENGINEERING']);
 
-const Dashboard: React.FC<DashboardProps> = ({ metrics, missions, onSelectMission, setView, onClearPathway }) => {
+const Dashboard: React.FC<DashboardProps> = ({ metrics, missions, onSelectMission, setView, onClearPathway, mode = 'HOME' }) => {
   const [selectedTrack, setSelectedTrack] = useState<LabTrack | 'ALL'>(metrics.activePathway || 'ALL');
 
   useEffect(() => {
@@ -45,164 +42,128 @@ const Dashboard: React.FC<DashboardProps> = ({ metrics, missions, onSelectMissio
     if (metrics.activePathway) setSelectedTrack(metrics.activePathway);
   }, [metrics.activePathway]);
 
-  const projectMissions = useMemo(
-    () => missions.filter((mission) => allowedTracks.has(mission.track)),
-    [missions],
-  );
+  const projectMissions = useMemo(() => missions.filter((mission) => allowedTracks.has(mission.track)), [missions]);
 
   const filteredMissions = useMemo(() => {
     if (selectedTrack === 'ALL') return projectMissions;
     return projectMissions.filter((mission) => mission.track === selectedTrack);
   }, [projectMissions, selectedTrack]);
 
-  const nextProject = useMemo(
-    () => filteredMissions.find((mission) => !mission.completed) || filteredMissions[0] || null,
-    [filteredMissions],
-  );
-
-  const projectSteps = useMemo(() => {
-    const pending = filteredMissions.filter((mission) => !mission.completed);
-    return (pending.length ? pending : filteredMissions).slice(0, 3);
-  }, [filteredMissions]);
+  const nextProject = useMemo(() => filteredMissions.find((mission) => !mission.completed) || filteredMissions[0] || null, [filteredMissions]);
 
   const completedProjects = projectMissions.filter((mission) => mission.completed).length;
-  const portfolioProgress = projectMissions.length
-    ? Math.round((completedProjects / projectMissions.length) * 100)
-    : 0;
+  const portfolioProgress = projectMissions.length ? Math.round((completedProjects / projectMissions.length) * 100) : 0;
+
+  const topProjects = useMemo(() => {
+    const pending = filteredMissions.filter((mission) => !mission.completed);
+    return (pending.length ? pending : filteredMissions).slice(0, mode === 'HOME' ? 3 : 8);
+  }, [filteredMissions, mode]);
 
   return (
-    <div className="relative h-screen overflow-hidden bg-[#0B0F14] px-6 pb-28 pt-8 md:px-10">
-      <div className="h-full overflow-y-auto space-y-6 pb-6 pr-1">
-        <header className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-          <p className="text-sm text-[#9CA3AF]">Home</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#F9FAFB]">Your next project is ready.</h1>
-          <p className="mt-3 max-w-3xl text-sm text-[#9CA3AF]">
-            Build serious work in AI, cybersecurity, coding, and advanced research. Every step is designed to become portfolio proof.
+    <div className="relative min-h-screen bg-black px-6 pb-12 pt-8 md:px-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_8%,rgba(255,255,255,0.08),transparent_35%),radial-gradient(circle_at_90%_20%,rgba(59,130,246,0.12),transparent_30%)]" />
+      <div className="relative space-y-6">
+        <header className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl backdrop-blur md:p-8">
+          <p className="text-sm text-zinc-400">{mode === 'HOME' ? 'Home' : 'Projects'}</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white md:text-4xl">Build serious tech projects before graduation.</h1>
+          <p className="mt-3 max-w-3xl text-sm text-zinc-300 md:text-base">
+            TechTales gives you one clear move at a time: pick a path, complete a guided project step, and turn the result into portfolio proof.
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
               onClick={() => (nextProject ? onSelectMission(nextProject.id) : null)}
-              className="h-11 rounded-lg bg-white px-5 text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200"
+              className="h-11 rounded-lg bg-white px-5 text-sm font-semibold text-black transition hover:scale-[1.02] hover:bg-zinc-200"
             >
-              {nextProject ? 'Continue Project' : 'Start Project'}
+              {nextProject ? 'Continue next project step' : 'Start first project step'}
             </button>
             <button
               onClick={() => setView(AppView.PORTFOLIO)}
-              className="h-11 rounded-lg border border-[#1F2937] px-5 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+              className="h-11 rounded-lg border border-white/20 px-5 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5"
             >
-              Add to Portfolio
+              Open portfolio
             </button>
           </div>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
-              <p className="text-sm text-[#9CA3AF]">Projects Completed</p>
-              <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{completedProjects}</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <article className="rounded-2xl border border-white/10 bg-black/60 p-4">
+              <p className="text-sm text-zinc-400">Projects Completed</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{completedProjects}</p>
             </article>
-            <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
-              <p className="text-sm text-[#9CA3AF]">Portfolio Progress</p>
-              <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{portfolioProgress}%</p>
+            <article className="rounded-2xl border border-white/10 bg-black/60 p-4">
+              <p className="text-sm text-zinc-400">Portfolio Progress</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{portfolioProgress}%</p>
             </article>
-            <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
-              <p className="text-sm text-[#9CA3AF]">Why this matters</p>
-              <p className="mt-2 text-sm text-[#F9FAFB]">These outputs strengthen applications, scholarships, and internship profiles.</p>
+            <article className="rounded-2xl border border-white/10 bg-black/60 p-4">
+              <p className="text-sm text-zinc-400">Why this matters</p>
+              <p className="mt-2 text-sm text-zinc-100">Use these outputs in university applications, internships, scholarships, and competitions.</p>
             </article>
           </div>
         </header>
 
-        <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-          <h2 className="text-xl font-semibold text-[#F9FAFB]">Paths</h2>
-          <p className="mt-2 text-sm text-[#9CA3AF]">Choose a path and progress from foundations to advanced work.</p>
-
-          <div className="mt-4 flex flex-wrap gap-2">
+        <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl backdrop-blur md:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white">Choose your path</h2>
+              <p className="mt-2 text-sm text-zinc-400">Focused pathways with clear levels and portfolio outcomes.</p>
+            </div>
             <button
               onClick={() => {
                 setSelectedTrack('ALL');
                 onClearPathway();
               }}
-              className={`h-9 rounded-lg px-3 text-sm font-medium transition-all duration-200 ease-out ${
-                selectedTrack === 'ALL' ? 'bg-white text-black' : 'border border-[#1F2937] text-[#9CA3AF] hover:text-[#F9FAFB]'
-              }`}
+              className="h-9 rounded-lg border border-white/15 px-3 text-sm text-zinc-300 transition hover:border-white/35 hover:text-white"
             >
-              All
+              Reset to all
             </button>
-            {paths.map((path) => (
-              <button
-                key={path.id}
-                onClick={() => setSelectedTrack(path.id)}
-                className={`h-9 rounded-lg px-3 text-sm font-medium transition-all duration-200 ease-out ${
-                  selectedTrack === path.id
-                    ? 'bg-white text-black'
-                    : 'border border-[#1F2937] text-[#9CA3AF] hover:text-[#F9FAFB]'
-                }`}
-              >
-                {path.title}
-              </button>
-            ))}
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {paths.map((path) => (
-              <article key={path.id} className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
-                <h3 className="text-xl font-semibold text-[#F9FAFB]">{path.title}</h3>
-                <p className="mt-2 text-sm text-[#9CA3AF]">Levels: <span className="text-[#F9FAFB]">{path.level}</span></p>
-                <p className="mt-1 text-sm text-[#9CA3AF]">Output: <span className="text-[#F9FAFB]">{path.output}</span></p>
+              <article
+                key={path.id}
+                className={`rounded-2xl border p-5 transition duration-300 ${
+                  selectedTrack === path.id
+                    ? 'border-blue-300/50 bg-blue-400/10 shadow-[0_10px_30px_rgba(59,130,246,0.15)]'
+                    : 'border-white/10 bg-black/50 hover:border-white/25'
+                }`}
+              >
+                <h3 className="text-xl font-semibold text-white">{path.title}</h3>
+                <p className="mt-2 text-sm text-zinc-300">{path.level}</p>
+                <p className="mt-1 text-sm text-zinc-400">Portfolio output: {path.output}</p>
                 <button
                   onClick={() => setSelectedTrack(path.id)}
-                  className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+                  className="mt-4 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5"
                 >
-                  Choose Path
+                  {selectedTrack === path.id ? 'Selected path' : 'Choose path'}
                 </button>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-          <h2 className="text-xl font-semibold text-[#F9FAFB]">Projects</h2>
-          <p className="mt-2 text-sm text-[#9CA3AF]">Complete these guided project steps and convert them into portfolio proof.</p>
+        <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl backdrop-blur md:p-8">
+          <h2 className="text-xl font-semibold text-white">Guided project steps</h2>
+          <p className="mt-2 text-sm text-zinc-400">Complete structured steps and add each result to your portfolio.</p>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            {projectSteps.map((mission) => (
-              <article key={mission.id} className="flex min-h-[230px] flex-col justify-between rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {topProjects.map((mission) => (
+              <article key={mission.id} className="flex min-h-[230px] flex-col justify-between rounded-2xl border border-white/10 bg-black/50 p-5 transition hover:-translate-y-0.5 hover:border-white/25">
                 <div>
-                  <p className="text-sm text-[#9CA3AF]">{trackLabel[mission.track]}</p>
-                  <h3 className="mt-2 text-xl font-semibold text-[#F9FAFB]">{mission.title}</h3>
-                  <p className="mt-2 line-clamp-3 text-sm text-[#9CA3AF]">{mission.description}</p>
+                  <p className="text-sm text-zinc-400">{trackLabel[mission.track]}</p>
+                  <h3 className="mt-2 text-xl font-semibold text-white">{mission.title}</h3>
+                  <p className="mt-2 text-sm text-zinc-400">{mission.description}</p>
                 </div>
                 <button
                   onClick={() => onSelectMission(mission.id)}
-                  className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-left text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+                  className="mt-4 h-10 rounded-lg border border-white/20 px-4 text-left text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5"
                 >
-                  {mission.completed ? 'Add to Portfolio' : 'Start Project Step'}
+                  {mission.completed ? 'Review project output' : 'Start project step'}
                 </button>
               </article>
             ))}
           </div>
         </section>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-[#1F2937] bg-[#0B0F14]/95 p-4 backdrop-blur md:left-[18rem]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[#9CA3AF]">
-            {nextProject ? `Next step: ${nextProject.title}` : 'All visible steps complete. Add your output to Portfolio.'}
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => (nextProject ? onSelectMission(nextProject.id) : null)}
-              className="h-10 rounded-lg bg-white px-4 text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200"
-            >
-              Continue Project
-            </button>
-            <button
-              onClick={() => setView(AppView.PORTFOLIO)}
-              className="h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
-            >
-              Add to Portfolio
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

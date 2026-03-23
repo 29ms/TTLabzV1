@@ -6,13 +6,13 @@ interface TerminalProps {
 }
 
 const tracks: { title: string; track: LabTrack; description: string }[] = [
-  { title: 'Build AI Project', track: 'ETHICS', description: 'Design, test, and present an AI-focused portfolio project.' },
-  { title: 'Build Cybersecurity Project', track: 'DEFENDER', description: 'Investigate real scenarios and produce structured security outputs.' },
-  { title: 'Build Coding Project', track: 'EXECUTIVE', description: 'Build practical software with planning, implementation, and testing evidence.' },
-  { title: 'Build Advanced Project', track: 'INTEL', description: 'Complete deeper investigations and publish advanced portfolio artifacts.' },
+  { title: 'AI Projects', track: 'ETHICS', description: 'Build practical AI projects with clear evaluation and portfolio reporting.' },
+  { title: 'Cybersecurity Projects', track: 'DEFENDER', description: 'Investigate real security scenarios and write structured audit evidence.' },
+  { title: 'Coding Projects', track: 'EXECUTIVE', description: 'Ship clean software projects with planning, implementation, and reflection.' },
+  { title: 'Advanced Projects', track: 'INTEL', description: 'Take strong work further through long-form research and deeper analysis.' },
 ];
 
-const steps = ['Choose Track', 'Complete Structured Lab', 'Generate Portfolio Output', 'Add to Portfolio'];
+const steps = ['Choose a path', 'Complete guided project stages', 'Create portfolio output', 'Export proof for real opportunities'];
 
 const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
   const handleStart = (track: LabTrack) => {
@@ -21,90 +21,57 @@ const Terminal: React.FC<TerminalProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans">
-      <header className="border-b border-zinc-800/80 bg-black/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 md:px-8">
+    <div className="min-h-screen bg-black text-zinc-100">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_14%,rgba(255,255,255,0.12),transparent_35%),radial-gradient(circle_at_80%_25%,rgba(59,130,246,0.15),transparent_35%)]" />
+      <header className="relative border-b border-white/10 bg-black/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 md:px-8">
           <div>
-            <p className="text-[20px] font-semibold text-white">TechTales Labs</p>
-            <p className="text-[15px] text-zinc-500">Structured portfolio project platform</p>
+            <p className="text-xl font-semibold text-white">TechTales</p>
+            <p className="text-sm text-zinc-400">Portfolio Builder for ambitious students</p>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-[15px] text-zinc-400">
-            <a href="#tracks" className="hover:text-white transition-colors duration-200 ease-out">Tracks</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors duration-200 ease-out">How It Works</a>
-          </nav>
+          <button onClick={onComplete} className="h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/45 hover:bg-white/5">
+            Enter app
+          </button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-12 md:px-8 md:py-16 space-y-14">
-        <section className="space-y-6">
-          <h1 className="text-[34px] font-semibold leading-tight text-white max-w-2xl">
-            Build Real Tech Projects Before Graduation
-          </h1>
-          <p className="text-[15px] leading-7 text-zinc-300 max-w-3xl">
-            TechTales helps students create serious AI, cybersecurity, and software projects that strengthen their portfolio.
+      <main className="relative mx-auto max-w-6xl space-y-16 px-6 py-16 md:px-8">
+        <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur">
+          <h1 className="max-w-3xl text-4xl font-semibold leading-tight text-white md:text-5xl">Build work worth showing.</h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-zinc-300">
+            TechTales helps you build serious projects in AI, cybersecurity, coding, and advanced research. Every step is designed to produce evidence you can actually use.
           </p>
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => onComplete()}
-              className="h-11 rounded-lg px-6 text-[15px] font-semibold bg-white text-black hover:bg-zinc-200 transition-colors duration-200 ease-out"
-            >
-              Start Building
-            </button>
-            <a
-              href="#tracks"
-              className="h-11 inline-flex items-center rounded-lg px-6 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
-            >
-              Explore Projects
-            </a>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button onClick={onComplete} className="h-11 rounded-lg bg-white px-6 text-sm font-semibold text-black transition hover:bg-zinc-200">Start building</button>
+            <a href="#tracks" className="h-11 inline-flex items-center rounded-lg border border-white/20 px-6 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5">Explore paths</a>
           </div>
         </section>
 
-
-        <section id="tracks" className="space-y-6">
-          <h2 className="text-[26px] font-semibold text-white">Build by Track</h2>
+        <section id="tracks" className="space-y-5">
+          <h2 className="text-2xl font-semibold text-white">Choose your path</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {tracks.map((track) => (
-              <article key={track.track} className="rounded-xl border border-zinc-800 bg-zinc-950 p-6 space-y-4">
-                <h3 className="text-[20px] font-semibold text-white">{track.title.replace('Build ', '')}</h3>
-                <p className="text-[15px] leading-7 text-zinc-300">{track.description}</p>
-                <button
-                  onClick={() => handleStart(track.track)}
-                  className="h-10 rounded-lg px-4 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
-                >
-                  Start
-                </button>
+              <article key={track.track} className="rounded-2xl border border-white/10 bg-zinc-950/70 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-white/30">
+                <h3 className="text-xl font-semibold text-white">{track.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-zinc-300">{track.description}</p>
+                <button onClick={() => handleStart(track.track)} className="mt-5 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5">Start this path</button>
               </article>
             ))}
           </div>
         </section>
 
-        <section id="how-it-works" className="space-y-6">
-          <h2 className="text-[26px] font-semibold text-white">How It Works</h2>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-6 md:p-8">
-            <ol className="grid gap-4 md:grid-cols-4">
-              {steps.map((step, i) => (
-                <li key={step} className="rounded-lg border border-zinc-800 bg-black px-4 py-4">
-                  <p className="text-[15px] text-zinc-500">Step {i + 1}</p>
-                  <p className="mt-2 text-[20px] font-semibold text-white">{step}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
+        <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl backdrop-blur">
+          <h2 className="text-2xl font-semibold text-white">How it works</h2>
+          <ol className="mt-5 grid gap-4 md:grid-cols-4">
+            {steps.map((step, i) => (
+              <li key={step} className="rounded-2xl border border-white/10 bg-black/50 p-4">
+                <p className="text-sm text-zinc-500">Step {i + 1}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{step}</p>
+              </li>
+            ))}
+          </ol>
         </section>
       </main>
-
-      <footer className="border-t border-zinc-800/80">
-        <div className="mx-auto max-w-6xl px-6 py-6 md:px-8 flex flex-wrap items-center justify-between gap-4 text-[15px] text-zinc-400">
-          <p>© 2026 TechTales Labs</p>
-          <div className="flex items-center gap-3">
-            <a href="/privacy.html" target="_blank" rel="noreferrer" className="hover:text-white">Privacy Policy</a>
-            <span>•</span>
-            <a href="/terms.html" target="_blank" rel="noreferrer" className="hover:text-white">Terms of Service</a>
-            <span>•</span>
-            <a href="https://medium.com/@realtechtales" target="_blank" rel="noreferrer" className="hover:text-white">Medium</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

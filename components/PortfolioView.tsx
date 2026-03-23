@@ -11,6 +11,7 @@ interface PortfolioViewProps {
   onSelectMission: (id: string) => void;
   setView: (view: AppView) => void;
   onLogout: () => void;
+  initialTab?: PortfolioTab;
 }
 
 const trackNames: Record<LabTrack, string> = {
@@ -48,8 +49,9 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
   onSelectMission,
   setView,
   onLogout,
+  initialTab = PortfolioTab.CERTIFICATIONS,
 }) => {
-  const [activeTab, setActiveTab] = useState<PortfolioTab>(PortfolioTab.CERTIFICATIONS);
+  const [activeTab, setActiveTab] = useState<PortfolioTab>(initialTab);
   const [tempName, setTempName] = useState(metrics.operatorName || '');
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -77,7 +79,7 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
     setTimeout(() => {
       onUpdateName(name);
       setIsUpdating(false);
-    }, 300);
+    }, 250);
   };
 
   const downloadCertificate = async (certificate: UserCertificate) => {
@@ -101,12 +103,12 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-[#0B0F14] px-6 pb-24 pt-8 md:px-10">
-      <header className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-        <p className="text-sm text-[#9CA3AF]">Portfolio</p>
-        <h1 className="mt-2 text-3xl font-semibold text-[#F9FAFB]">Build evidence of ability.</h1>
-        <p className="mt-3 max-w-3xl text-sm text-[#9CA3AF]">
-          Your portfolio is where project outputs, certificates, and progress become proof for real opportunities.
+    <div className="min-h-screen bg-black px-6 pb-10 pt-8 md:px-10">
+      <header className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl backdrop-blur md:p-8">
+        <p className="text-sm text-zinc-400">Portfolio</p>
+        <h1 className="mt-2 text-3xl font-semibold text-white">Build evidence of ability.</h1>
+        <p className="mt-3 max-w-3xl text-sm text-zinc-300">
+          Every project outcome should become proof: structured writing, technical reasoning, and certificates that support your applications.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -114,10 +116,10 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`h-9 rounded-lg px-3 text-sm font-medium transition-all duration-200 ease-out ${
+              className={`h-9 rounded-lg px-3 text-sm font-medium transition ${
                 activeTab === tab.id
                   ? 'bg-white text-black'
-                  : 'border border-[#1F2937] text-[#9CA3AF] hover:text-[#F9FAFB]'
+                  : 'border border-white/15 text-zinc-300 hover:border-white/40 hover:text-white'
               }`}
             >
               {tab.label}
@@ -126,102 +128,87 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
         </div>
       </header>
 
-      <main className="mt-6 h-[calc(100%-15rem)] overflow-y-auto pr-1 space-y-6">
+      <main className="mt-6 space-y-6">
         {activeTab === PortfolioTab.CERTIFICATIONS && (
           <>
-            <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
+            <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl md:p-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-semibold text-[#F9FAFB]">Portfolio Artifacts</h2>
-                  <p className="mt-2 text-sm text-[#9CA3AF]">Completed projects converted into structured entries.</p>
+                  <h2 className="text-xl font-semibold text-white">Portfolio artifacts</h2>
+                  <p className="mt-2 text-sm text-zinc-400">Outputs generated from completed project steps.</p>
                 </div>
                 <button
-                  onClick={() => setView(AppView.DASHBOARD)}
-                  className="h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+                  onClick={() => setView(AppView.PROJECTS)}
+                  className="h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/45 hover:bg-white/5"
                 >
-                  Build More Projects
+                  Build more projects
                 </button>
               </div>
 
               {portfolioItems.length === 0 ? (
-                <div className="mt-5 rounded-xl border border-dashed border-[#1F2937] bg-[#0B0F14] p-6 text-sm text-[#9CA3AF]">
-                  No artifacts yet. Complete your first guided project step and add it here.
+                <div className="mt-5 rounded-2xl border border-dashed border-white/20 bg-black/40 p-6 text-sm text-zinc-400">
+                  No artifacts yet. Complete your first guided step and this space will fill with evidence.
                 </div>
               ) : (
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   {portfolioItems.map((item) => (
-                    <article key={item.id} className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
-                      <h3 className="text-xl font-semibold text-[#F9FAFB]">{item.title}</h3>
-                      <p className="mt-2 text-sm text-[#9CA3AF]">{item.description}</p>
-                      <p className="mt-3 text-sm text-[#9CA3AF]">
-                        Category: <span className="text-[#F9FAFB]">{item.category}</span>
-                      </p>
-                      <p className="mt-1 text-sm text-[#9CA3AF]">
-                        Artifact type: <span className="text-[#F9FAFB]">{item.artifactType}</span>
-                      </p>
+                    <article key={item.id} className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                      <p className="text-sm text-zinc-400">{item.category}</p>
+                      <h3 className="mt-1 text-xl font-semibold text-white">{item.title}</h3>
+                      <p className="mt-2 text-sm text-zinc-400">{item.description}</p>
+                      <p className="mt-3 text-sm text-zinc-300">Artifact: {item.artifactType}</p>
                     </article>
                   ))}
                 </div>
               )}
             </section>
 
-            <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-[#F9FAFB]">Certificates</h2>
-              <p className="mt-2 text-sm text-[#9CA3AF]">Download verified records for completed milestones.</p>
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {metrics.earnedCertificates.length === 0 && (
-                  <p className="text-sm text-[#9CA3AF]">No certificates earned yet.</p>
-                )}
-                {metrics.earnedCertificates.map((certificate) => (
-                  <article key={certificate.id} className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
-                    <h3 className="text-xl font-semibold text-[#F9FAFB]">{certificate.title}</h3>
-                    <p className="mt-2 text-sm text-[#9CA3AF]">Issued: {new Date(certificate.issuedAt).toLocaleDateString()}</p>
-                    <button
-                      onClick={() => downloadCertificate(certificate)}
-                      disabled={isDownloading === certificate.id}
-                      className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white disabled:opacity-60"
-                    >
-                      {isDownloading === certificate.id ? 'Preparing file...' : 'Download Certificate'}
-                    </button>
-                  </article>
-                ))}
-              </div>
+            <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl md:p-8">
+              <h2 className="text-xl font-semibold text-white">Certificates</h2>
+              <p className="mt-2 text-sm text-zinc-400">Download verified certificates for completed pathways and research milestones.</p>
+              {metrics.earnedCertificates.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-dashed border-white/20 bg-black/40 p-6 text-sm text-zinc-400">
+                  No certificates earned yet.
+                </div>
+              ) : (
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  {metrics.earnedCertificates.map((certificate) => (
+                    <article key={certificate.id} className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                      <h3 className="text-lg font-semibold text-white">{certificate.title}</h3>
+                      <p className="mt-1 text-sm text-zinc-400">Issued: {certificate.issuedAt}</p>
+                      <button
+                        onClick={() => downloadCertificate(certificate)}
+                        disabled={isDownloading === certificate.id}
+                        className="mt-4 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5 disabled:opacity-50"
+                      >
+                        {isDownloading === certificate.id ? 'Preparing file…' : 'Download certificate'}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
             </section>
           </>
         )}
 
         {activeTab === PortfolioTab.PROFILE && (
-          <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-[#F9FAFB]">Progress</h2>
-            <p className="mt-2 text-sm text-[#9CA3AF]">Track momentum and continue your strongest project path.</p>
+          <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl md:p-8">
+            <h2 className="text-xl font-semibold text-white">Progress</h2>
+            <p className="mt-2 text-sm text-zinc-400">Track your momentum and continue your strongest path.</p>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
-              <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
-                <p className="text-sm text-[#9CA3AF]">Points</p>
-                <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{metrics.points}</p>
-              </article>
-              <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
-                <p className="text-sm text-[#9CA3AF]">Projects Completed</p>
-                <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{metrics.labsCompleted}</p>
-              </article>
-              <article className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-4">
-                <p className="text-sm text-[#9CA3AF]">Portfolio Items</p>
-                <p className="mt-2 text-xl font-semibold text-[#F9FAFB]">{portfolioItems.length}</p>
-              </article>
+              <article className="rounded-2xl border border-white/10 bg-black/40 p-4"><p className="text-sm text-zinc-400">Points</p><p className="mt-2 text-2xl font-semibold text-white">{metrics.points}</p></article>
+              <article className="rounded-2xl border border-white/10 bg-black/40 p-4"><p className="text-sm text-zinc-400">Projects Completed</p><p className="mt-2 text-2xl font-semibold text-white">{metrics.labsCompleted}</p></article>
+              <article className="rounded-2xl border border-white/10 bg-black/40 p-4"><p className="text-sm text-zinc-400">Portfolio Items</p><p className="mt-2 text-2xl font-semibold text-white">{portfolioItems.length}</p></article>
             </div>
 
-            <h3 className="mt-6 text-xl font-semibold text-[#F9FAFB]">Continue Building</h3>
+            <h3 className="mt-6 text-xl font-semibold text-white">Continue building</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               {pending.map((project) => (
-                <article key={project.id} className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
-                  <p className="text-sm text-[#9CA3AF]">{trackNames[project.track]}</p>
-                  <h4 className="mt-2 text-xl font-semibold text-[#F9FAFB]">{project.title}</h4>
-                  <p className="mt-2 text-sm text-[#9CA3AF]">{project.description}</p>
-                  <button
-                    onClick={() => onSelectMission(project.id)}
-                    className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
-                  >
-                    Continue Project
-                  </button>
+                <article key={project.id} className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                  <p className="text-sm text-zinc-400">{trackNames[project.track]}</p>
+                  <h4 className="mt-2 text-xl font-semibold text-white">{project.title}</h4>
+                  <p className="mt-2 text-sm text-zinc-400">{project.description}</p>
+                  <button onClick={() => onSelectMission(project.id)} className="mt-4 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5">Continue project</button>
                 </article>
               ))}
             </div>
@@ -229,23 +216,23 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
         )}
 
         {activeTab === PortfolioTab.SETTINGS && (
-          <section className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-[#F9FAFB]">Paths</h2>
-            <p className="mt-2 text-sm text-[#9CA3AF]">Choose the path that should guide your recommended projects.</p>
+          <section className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl md:p-8">
+            <h2 className="text-xl font-semibold text-white">Paths</h2>
+            <p className="mt-2 text-sm text-zinc-400">Choose which path should guide your recommended projects.</p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {CERTIFICATIONS.map((certification) => (
-                <article key={certification.id} className="rounded-xl border border-[#1F2937] bg-[#0B0F14] p-5">
-                  <h3 className="text-xl font-semibold text-[#F9FAFB]">{certification.name}</h3>
-                  <p className="mt-2 text-sm text-[#9CA3AF]">Track: {trackNames[certification.track]}</p>
-                  <p className="mt-1 text-sm text-[#9CA3AF]">Required projects: {certification.requiredLabs}</p>
+                <article key={certification.id} className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                  <h3 className="text-xl font-semibold text-white">{certification.name}</h3>
+                  <p className="mt-2 text-sm text-zinc-400">Track: {trackNames[certification.track]}</p>
+                  <p className="mt-1 text-sm text-zinc-400">Required projects: {certification.requiredLabs}</p>
                   <button
                     onClick={() => {
                       onActivatePathway(certification.track);
-                      setView(AppView.DASHBOARD);
+                      setView(AppView.PROJECTS);
                     }}
-                    className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
+                    className="mt-4 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5"
                   >
-                    Choose Path
+                    Choose path
                   </button>
                 </article>
               ))}
@@ -255,45 +242,35 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
 
         {activeTab === PortfolioTab.ACCOUNT && (
           <section className="grid gap-6 md:grid-cols-2">
-            <article className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-[#F9FAFB]">Account</h2>
-              <p className="mt-2 text-sm text-[#9CA3AF]">Set your full name for certificates and portfolio exports.</p>
+            <article className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl md:p-8">
+              <h2 className="text-xl font-semibold text-white">Account</h2>
+              <p className="mt-2 text-sm text-zinc-400">Set your full name for certificates and portfolio exports.</p>
               <form onSubmit={handleNameSubmit} className="mt-5 space-y-3">
-                <label className="block text-sm text-[#9CA3AF]">Full name</label>
+                <label className="block text-sm text-zinc-400">Full name</label>
                 <input
                   type="text"
                   value={tempName}
                   onChange={(event) => setTempName(event.target.value)}
-                  className="h-11 w-full rounded-lg border border-[#1F2937] bg-[#0B0F14] px-3 text-sm text-[#F9FAFB] outline-none transition-all duration-200 ease-out focus:border-white"
+                  className="h-11 w-full rounded-lg border border-white/20 bg-black/40 px-3 text-sm text-white outline-none transition focus:border-white/50"
                 />
                 <button
                   type="submit"
                   disabled={isUpdating || tempName.trim().length < 3}
-                  className="h-10 rounded-lg bg-white px-4 text-sm font-medium text-black transition-all duration-200 ease-out hover:bg-zinc-200 disabled:opacity-60"
+                  className="h-10 rounded-lg bg-white px-4 text-sm font-semibold text-black transition hover:bg-zinc-200 disabled:opacity-60"
                 >
-                  {isUpdating ? 'Saving...' : 'Save'}
+                  {isUpdating ? 'Saving…' : 'Save'}
                 </button>
               </form>
             </article>
 
-            <article className="rounded-2xl border border-[#1F2937] bg-[#111827] p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-[#F9FAFB]">Plan</h2>
-              <p className="mt-2 text-sm text-[#9CA3AF]">Current access level for project, research, and export tools.</p>
-              <p className="mt-4 text-xl font-semibold text-[#F9FAFB]">{metrics.isPremium ? 'Pro' : 'Standard'}</p>
+            <article className="rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl md:p-8">
+              <h2 className="text-xl font-semibold text-white">Plan</h2>
+              <p className="mt-2 text-sm text-zinc-400">Current access level for project, research, and export tools.</p>
+              <p className="mt-4 text-xl font-semibold text-white">{metrics.isPremium ? 'Pro' : 'Standard'}</p>
               {!metrics.isPremium && (
-                <button
-                  onClick={() => setView(AppView.UPGRADE)}
-                  className="mt-4 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#F9FAFB] transition-all duration-200 ease-out hover:border-white"
-                >
-                  Upgrade
-                </button>
+                <button onClick={() => setView(AppView.UPGRADE)} className="mt-4 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-white transition hover:border-white/40 hover:bg-white/5">Upgrade</button>
               )}
-              <button
-                onClick={onLogout}
-                className="mt-3 h-10 rounded-lg border border-[#1F2937] px-4 text-sm font-medium text-[#9CA3AF] transition-all duration-200 ease-out hover:border-white hover:text-[#F9FAFB]"
-              >
-                Log out
-              </button>
+              <button onClick={onLogout} className="mt-3 h-10 rounded-lg border border-white/20 px-4 text-sm font-medium text-zinc-400 transition hover:border-white/40 hover:text-white">Log out</button>
             </article>
           </section>
         )}

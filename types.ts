@@ -1,8 +1,11 @@
 export enum AppView {
   TERMINAL = 'TERMINAL',
   DASHBOARD = 'DASHBOARD',
+  PROJECTS = 'PROJECTS',
   MISSION = 'MISSION',
   PORTFOLIO = 'PORTFOLIO',
+  CERTIFICATES = 'CERTIFICATES',
+  ACCOUNT = 'ACCOUNT',
   LEARN = 'LEARN',
   SPEED_LABS = 'SPEED_LABS',
   UPGRADE = 'UPGRADE',
@@ -99,7 +102,6 @@ export interface BlogPost {
   pubDate?: string;
 }
 
-// New Research Builder Types
 export interface ResearchSection {
   id: string;
   title: string;
