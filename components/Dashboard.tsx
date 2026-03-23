@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { AppView, LabTrack, Mission, UserMetrics } from '../types';
+import React, { useState, useEffect } from 'react';
+import { UserMetrics, Mission, AppView, LabTrack } from '../types';
+import VirtualSOC from './VirtualSOC';
 
 interface DashboardProps {
   metrics: UserMetrics;
@@ -7,265 +8,210 @@ interface DashboardProps {
   onSelectMission: (id: string) => void;
   setView: (view: AppView) => void;
   onClearPathway: () => void;
-  mode?: 'DASHBOARD' | 'TRACKS';
+  snowToggle: () => void;
+  isSnowing: boolean;
+  onUpdatePoints: (pts: number) => void;
+  onUpdateName: (name: string) => void;
 }
 
-const trackMeta: Record<LabTrack, { label: string; summary: string; image: string }> = {
-  ETHICS: {
-    label: 'Artificial Intelligence',
-    summary: 'Model evaluation, prompt systems, and decision-ready AI reports.',
-    image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80',
-  },
-  DEFENDER: {
-    label: 'Cybersecurity',
-    summary: 'Threat analysis, secure architecture, and real defense strategy.',
-    image: 'https://images.unsplash.com/photo-1510511459019-5dda7724fd87?auto=format&fit=crop&w=1200&q=80',
-  },
-  EXECUTIVE: {
-    label: 'Coding Systems',
-    summary: 'Software builds with planning, implementation, and clean execution.',
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-  },
-  INTEL: {
-    label: 'Robotics',
-    summary: 'Automation systems, embedded logic, and prototype development.',
-    image: 'https://images.unsplash.com/photo-1535378917042-10a22c95931a?auto=format&fit=crop&w=1200&q=80',
-  },
+const trackLabels: Record<LabTrack, string> = {
+  LIFE: 'Real Life Safety',
+  SOVEREIGNTY: 'Digital Footprint',
+  DEFENDER: 'Cybersecurity Projects',
+  EXECUTIVE: 'Coding Projects',
+  INTEL: 'Advanced Projects',
+  ETHICS: 'AI Projects',
+  AI_ENGINEERING: 'AI Projects',
 };
 
-const trackList = Object.keys(trackMeta) as LabTrack[];
-const accent = '#c1121f';
-const accentDark = '#a30f1a';
+const starterTracks: { id: LabTrack; title: string; summary: string }[] = [
+  { id: 'ETHICS', title: 'AI Projects', summary: 'Build and evaluate model-driven projects with structured evidence.' },
+  { id: 'DEFENDER', title: 'Cybersecurity Projects', summary: 'Investigate incidents and produce clear security recommendations.' },
+  { id: 'EXECUTIVE', title: 'Coding Projects', summary: 'Create practical software outcomes with test-backed implementation.' },
+  { id: 'INTEL', title: 'Advanced Projects', summary: 'Run deeper investigations and publish advanced portfolio artifacts.' },
+];
 
-const Dashboard: React.FC<DashboardProps> = ({ metrics, missions, onSelectMission, setView, onClearPathway, mode = 'DASHBOARD' }) => {
+const Dashboard: React.FC<DashboardProps> = ({
+  metrics,
+  missions,
+  onSelectMission,
+  setView,
+  onClearPathway,
+  snowToggle,
+  isSnowing,
+  onUpdatePoints,
+}) => {
   const [selectedTrack, setSelectedTrack] = useState<LabTrack | 'ALL'>(metrics.activePathway || 'ALL');
-  const [viewFilter, setViewFilter] = useState<'ALL' | 'BASIC' | 'ADVANCED'>('ALL');
+  const [showLabs, setShowLabs] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(3);
+  const [showPractice, setShowPractice] = useState(false);
 
-  const filtered = useMemo(() => {
-    const byTrack = selectedTrack === 'ALL' ? missions : missions.filter((mission) => mission.track === selectedTrack);
-    if (viewFilter === 'ALL') return byTrack;
-    return byTrack.filter((mission) => mission.level === viewFilter);
-  }, [missions, selectedTrack, viewFilter]);
+  useEffect(() => {
+    const preferredTrack = localStorage.getItem('preferredTrack') as LabTrack | null;
+    if (preferredTrack) {
+      setSelectedTrack(preferredTrack);
+      setShowLabs(true);
+      localStorage.removeItem('preferredTrack');
+      return;
+    }
 
-  const completedModules = missions.filter((mission) => mission.completed);
-  const activeModules = missions.filter((mission) => !mission.completed).slice(0, 3);
-  const nextModule = activeModules[0] || missions[0];
-  const completionRate = missions.length ? Math.round((completedModules.length / missions.length) * 100) : 0;
+    if (metrics.activePathway) {
+      setSelectedTrack(metrics.activePathway);
+      setShowLabs(true);
+    }
+  }, [metrics.activePathway]);
 
-  if (mode === 'DASHBOARD') {
+  const filteredMissions = selectedTrack === 'ALL'
+    ? missions
+    : missions.filter((m) => m.track === selectedTrack);
+
+  const recommendedLabs = filteredMissions.filter((m) => !m.completed);
+  const visibleLabs = (recommendedLabs.length ? recommendedLabs : filteredMissions).slice(0, visibleCount);
+  const nextLab = (recommendedLabs.length ? recommendedLabs : filteredMissions).find((m) => !m.completed) || null;
+
+  const handleChooseTrack = (track: LabTrack) => {
+    setSelectedTrack(track);
+    setShowLabs(true);
+    setShowPractice(false);
+    setVisibleCount(3);
+  };
+
+  if (showPractice) {
     return (
-      <div className="min-h-screen bg-[#0b0b0d] px-6 py-8 text-[#EAEAEA] md:px-10">
-        <div className="space-y-6">
-          <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <article className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
-              <p className="text-sm uppercase tracking-[0.28em] text-[#fca5a5]">Dashboard</p>
-              <h1 className="mt-4 text-[40px] font-semibold leading-tight text-white">Your next impressive project is ready.</h1>
-              <p className="mt-4 max-w-2xl text-base leading-8 text-zinc-300">
-                Build advanced portfolio work step by step, then take it further in the Project Development Lab.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <button
-                  onClick={() => (nextModule ? onSelectMission(nextModule.id) : setView(AppView.TRACKS))}
-                  className="h-12 rounded-full bg-[#c1121f] px-6 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-[#a30f1a]"
-                >
-                  Continue current project
-                </button>
-                <button
-                  onClick={() => setView(AppView.TRACKS)}
-                  className="h-12 rounded-full border border-white/10 px-6 text-sm font-medium text-white transition-all duration-200 ease-out hover:border-[#c1121f] hover:bg-white/[0.04]"
-                >
-                  Browse projects
-                </button>
-              </div>
-            </article>
-
-            <article className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#121215]">
-              <div className="relative h-full min-h-[280px] bg-cover bg-center" style={{ backgroundImage: `url('${trackMeta[nextModule?.track || 'ETHICS'].image}')` }}>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/5" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <p className="text-xs uppercase tracking-[0.28em] text-[#fecaca]">Continue building</p>
-                  <h2 className="mt-3 text-3xl font-semibold text-white">{nextModule?.title || 'Choose your first project'}</h2>
-                  <p className="mt-3 text-sm leading-7 text-zinc-200">{nextModule?.description || 'Open the project browser to begin.'}</p>
-                </div>
-              </div>
-            </article>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {[
-              ['My Projects', `${activeModules.length} active`],
-              ['Completed Projects', `${completedModules.length}`],
-              ['Portfolio Progress', `${completionRate}%`],
-              ['Current Tier', metrics.isPremium ? 'Pro' : 'Starter'],
-            ].map(([label, value]) => (
-              <article key={label} className="rounded-[1.5rem] border border-white/10 bg-[#121215] p-6">
-                <p className="text-sm text-zinc-400">{label}</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-            <article className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">My projects</p>
-                  <h2 className="mt-3 text-3xl font-semibold text-white">Work already in motion</h2>
-                </div>
-                <button
-                  onClick={() => setView(AppView.TRACKS)}
-                  className="h-11 rounded-full border border-white/10 px-5 text-sm font-medium text-white transition-all duration-200 ease-out hover:border-[#c1121f]"
-                >
-                  View all
-                </button>
-              </div>
-              <div className="mt-6 space-y-4">
-                {activeModules.map((module, index) => (
-                  <button
-                    key={module.id}
-                    onClick={() => onSelectMission(module.id)}
-                    className="flex w-full items-center justify-between rounded-[1.4rem] border border-white/10 bg-white/[0.03] px-5 py-5 text-left transition-all duration-200 ease-out hover:border-[#c1121f]/45 hover:bg-white/[0.05]"
-                  >
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-[#fca5a5]">Project {index + 1}</p>
-                      <p className="mt-2 text-xl font-semibold text-white">{module.title}</p>
-                      <p className="mt-2 text-sm text-zinc-400">{trackMeta[module.track].label}</p>
-                    </div>
-                    <span className="rounded-full bg-[#c1121f] px-4 py-2 text-xs font-semibold text-white">Continue</span>
-                  </button>
-                ))}
-              </div>
-            </article>
-
-            <article className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
-              <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">Browse projects</p>
-              <h2 className="mt-3 text-3xl font-semibold text-white">Four ambitious tracks</h2>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                {trackList.map((track) => (
-                  <button
-                    key={track}
-                    onClick={() => {
-                      setSelectedTrack(track);
-                      setView(AppView.TRACKS);
-                    }}
-                    className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03] text-left transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[#c1121f]/45"
-                  >
-                    <div className="h-32 bg-cover bg-center" style={{ backgroundImage: `url('${trackMeta[track].image}')` }} />
-                    <div className="p-5">
-                      <p className="text-lg font-semibold text-white">{trackMeta[track].label}</p>
-                      <p className="mt-2 text-sm leading-7 text-zinc-400">{trackMeta[track].summary}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </article>
-          </section>
+      <div className="p-8 md:p-12 pb-24 h-screen flex flex-col overflow-hidden">
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-[34px] font-semibold text-white">Cybersecurity Practice</h1>
+            <p className="text-[15px] text-zinc-400 mt-2">Focused simulations to sharpen analysis and incident response thinking.</p>
+          </div>
+          <button onClick={() => setShowPractice(false)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Back</button>
+        </header>
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <VirtualSOC onUpdatePoints={onUpdatePoints} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0b0d] px-6 py-8 text-[#EAEAEA] md:px-10">
-      <div className="space-y-6">
-        <section className="rounded-[2rem] border border-white/10 bg-[#121215] p-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-zinc-500">Projects</p>
-              <h1 className="mt-3 text-[40px] font-semibold leading-tight text-white">Browse high-end project builds</h1>
-              <p className="mt-4 max-w-3xl text-base leading-8 text-zinc-300">
-                Choose a track, start with a guided builder, then continue into the Project Development Lab for a stronger final result.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setSelectedTrack('ALL');
-                setViewFilter('ALL');
-                onClearPathway();
-              }}
-              className="h-11 rounded-full border border-white/10 px-5 text-sm font-medium text-white transition-all duration-200 ease-out hover:border-[#c1121f]"
-            >
-              Clear filters
-            </button>
+    <div className="p-8 md:p-12 pb-24 h-screen flex flex-col overflow-hidden">
+      <header className="mb-8 border-b border-zinc-900 pb-6 flex flex-col gap-5 shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-[34px] font-semibold text-white">Project Dashboard</h1>
+            <p className="text-[15px] text-zinc-400 mt-2">Build, start labs, add outputs, and export from portfolio.</p>
           </div>
-        </section>
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => setShowPractice(true)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Practice</button>
+            <button onClick={() => setView(AppView.RESEARCH)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Start Advanced</button>
+          </div>
 
-        <section className="grid gap-4 lg:grid-cols-4">
-          {trackList.map((track) => {
-            const active = selectedTrack === track;
-            return (
+          <nav className="flex bg-zinc-950 border border-zinc-900 p-1 rounded-md w-fit">
+            {[
+              { id: DashboardSubView.INTEL_HUB, label: 'Labs' },
+              { id: DashboardSubView.VIRTUAL_SOC, label: 'Cybersecurity Practice' },
+              { id: DashboardSubView.NEURAL_OPS, label: 'Advanced Builder' },
+            ].map((view) => (
               <button
-                key={track}
-                onClick={() => setSelectedTrack(track)}
-                className={`overflow-hidden rounded-[1.7rem] border text-left transition-all duration-200 ease-out ${active ? 'border-[#c1121f]/50 bg-[#c1121f]/10' : 'border-white/10 bg-[#121215] hover:border-[#c1121f]/35'}`}
+                key={view.id}
+                onClick={() => setSubView(view.id)}
+                className={`px-4 py-2 text-[15px] font-medium rounded transition-all ${
+                  subView === view.id ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:text-zinc-100'
+                }`}
               >
-                <div className="h-40 bg-cover bg-center" style={{ backgroundImage: `url('${trackMeta[track].image}')` }} />
-                <div className="p-5">
-                  <p className="text-lg font-semibold text-white">{trackMeta[track].label}</p>
-                  <p className="mt-2 text-sm leading-7 text-zinc-400">{trackMeta[track].summary}</p>
-                </div>
+                {view.label}
+                {view.id === DashboardSubView.NEURAL_OPS && !metrics.isPremium && (
+                  <span className="ml-2 text-[10px] text-zinc-500">Locked</span>
+                )}
               </button>
-            );
-          })}
-        </section>
+            ))}
+          </nav>
+        </div>
 
-        <section className="flex flex-wrap gap-3">
-          {(['ALL', 'BASIC', 'ADVANCED'] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setViewFilter(filter)}
-              className={`h-10 rounded-full px-5 text-sm font-medium transition-all duration-200 ease-out ${viewFilter === filter ? 'bg-[#c1121f] text-white' : 'border border-white/10 text-white hover:border-[#c1121f]'}`}
-            >
-              {filter === 'ALL' ? 'All projects' : filter === 'BASIC' ? 'Basic projects' : 'Advanced projects'}
-            </button>
-          ))}
-        </section>
+        <div className="flex flex-wrap gap-6 text-[15px] text-zinc-400">
+          <span>{metrics.labsCompleted} Labs</span>
+          <span>{metrics.points.toLocaleString()} Points</span>
+          <button onClick={snowToggle} className="hover:text-zinc-200 transition-colors duration-200 ease-out">{isSnowing ? 'Disable Snow' : 'Enable Snow'}</button>
+        </div>
+      </header>
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((module, index) => {
-            const track = trackMeta[module.track];
-            const locked = module.premium && !metrics.isPremium;
-            return (
-              <article key={module.id} className="overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#121215] transition-all duration-200 ease-out hover:-translate-y-1 hover:border-[#c1121f]/35">
-                <div className="relative h-48 bg-cover bg-center" style={{ backgroundImage: `url('${track.image}')` }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-                  <div className="absolute left-4 top-4 flex gap-2">
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">{module.level}</span>
-                    {locked ? (
-                      <span className="rounded-full bg-[#c1121f] px-3 py-1 text-xs font-semibold text-white">Premium</span>
-                    ) : index === 0 && module.level === 'BASIC' ? (
-                      <span className="rounded-full bg-[#166534] px-3 py-1 text-xs font-semibold text-white">Starter access</span>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="p-6">
-                  <p className="text-sm text-zinc-400">{track.label}</p>
-                  <h2 className="mt-2 text-2xl font-semibold text-white">{module.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-zinc-400">{module.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {module.tags.map((tag) => (
-                      <span key={tag} className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-300">{tag}</span>
-                    ))}
-                  </div>
-                  <div className="mt-5 flex items-center justify-between">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-24">
+        {!showLabs ? (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8 md:p-10 space-y-6">
+            <div>
+              <h2 className="text-[26px] font-semibold text-white">Start Here</h2>
+              <p className="mt-3 text-[15px] text-zinc-300 max-w-3xl">Choose a track, complete structured labs, and add outputs to your portfolio.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {starterTracks.map((track) => (
+                <button key={track.id} onClick={() => handleChooseTrack(track.id)} className="text-left rounded-xl border border-zinc-800 bg-black p-6 hover:bg-zinc-900/70 transition-all duration-200 ease-out">
+                  <h3 className="text-[20px] font-semibold text-white">{track.title}</h3>
+                  <p className="mt-3 text-[15px] text-zinc-300">{track.summary}</p>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <>
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 md:p-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+              <div>
+                <h2 className="text-[26px] font-semibold text-white">{selectedTrack === 'ALL' ? 'All Tracks' : trackLabels[selectedTrack]}</h2>
+                <p className="mt-2 text-[15px] text-zinc-400">Each lab includes concept, application, output, and reflection.</p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => { setSelectedTrack('ALL'); onClearPathway(); setVisibleCount(3); }} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">View All</button>
+                <button onClick={() => setShowLabs(false)} className="h-10 rounded-lg px-4 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Change Track</button>
+              </div>
+            </section>
+
+            <section className="mt-6">
+              <h3 className="text-[20px] font-semibold text-white mb-4">Recommended Next Labs</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
+                {visibleLabs.map((mission) => (
+                  <button key={mission.id} onClick={() => onSelectMission(mission.id)} className={`text-left rounded-xl border border-zinc-800 bg-zinc-950 p-6 hover:bg-zinc-900 transition-all duration-200 ease-out min-h-[260px] flex flex-col justify-between ${mission.completed ? 'opacity-50' : ''}`}>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">Estimated time</p>
-                      <p className="mt-1 text-sm text-white">{module.estimatedMinutes} min</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[15px] text-zinc-500">{trackLabels[mission.track] || mission.track}</p>
+                        {mission.completed && <span className="text-[12px] rounded-full border border-emerald-700/70 bg-emerald-900/20 px-2 py-1 text-emerald-300">Output Ready</span>}
+                      </div>
+                      <h4 className="mt-2 text-[20px] font-semibold text-white">{mission.title}</h4>
+                      <p className="mt-3 text-[15px] text-zinc-400 line-clamp-2">{mission.description}</p>
+                      <ul className="mt-4 space-y-1 text-[15px] text-zinc-500">
+                        <li>• Concept</li><li>• Application</li><li>• Structured Output + Reflection</li>
+                      </ul>
                     </div>
-                    <button
-                      onClick={() => onSelectMission(module.id)}
-                      className="h-10 rounded-full px-5 text-sm font-semibold text-white transition-all duration-200 ease-out"
-                      style={{ backgroundColor: locked ? '#3f3f46' : accent }}
-                    >
-                      {module.completed ? 'Reopen' : locked ? 'Preview' : 'Start build'}
-                    </button>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+                    <p className="mt-4 text-[15px] text-zinc-300">{mission.completed ? 'Add to Portfolio' : 'Start Lab →'}</p>
+                  </button>
+                ))}
+              </div>
+
+              {visibleLabs.length < (recommendedLabs.length ? recommendedLabs.length : filteredMissions.length) && (
+                <button onClick={() => setVisibleCount((prev) => prev + 3)} className="h-10 rounded-lg px-5 text-[15px] border border-zinc-700 text-zinc-200 hover:border-zinc-500 transition-colors duration-200 ease-out">Show More Labs</button>
+              )}
+            </section>
+          </>
+        )}
       </div>
+
+      <div className="sticky bottom-0 z-20 border-t border-zinc-800 bg-black/95 backdrop-blur p-4 md:p-5 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[15px] text-zinc-400">{nextLab ? `Next: ${nextLab.title}` : 'All recommended labs completed. Add outputs to portfolio.'}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => nextLab ? onSelectMission(nextLab.id) : setView(AppView.DASHBOARD)}
+            className="h-10 rounded-lg px-4 text-[15px] font-semibold bg-white text-black hover:bg-zinc-200 transition-colors duration-200 ease-out"
+          >
+            Continue Project
+          </button>
+          <button
+            onClick={() => setView(AppView.PORTFOLIO)}
+            className="h-10 rounded-lg px-4 text-[15px] font-semibold border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors duration-200 ease-out"
+          >
+            Add to Portfolio
+          </button>
+        </div>
+      </div>
+
+      <style>{`.custom-scrollbar::-webkit-scrollbar{width:4px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#27272a;border-radius:10px}`}</style>
     </div>
   );
 };

@@ -80,8 +80,10 @@ const normalizeMissions = (value: unknown): Mission[] => {
     if (normalized) savedMap.set(normalized.id, normalized);
   });
 
-  return MISSIONS.map((mission) => savedMap.get(mission.id) || mission);
-};
+  if (saved?.view) {
+    setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
+  }
+}
 
 const normalizeResearchState = (value: unknown) => {
   if (typeof value !== 'object' || value === null) return DEFAULT_RESEARCH_STATE;
@@ -108,19 +110,12 @@ const App: React.FC = () => {
   const [isStateHydrated, setIsStateHydrated] = useState(false);
   const [researchState, setResearchState] = useState(DEFAULT_RESEARCH_STATE);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      setIsStateHydrated(false);
-      if (!currentUser) {
-        setMetrics(INITIAL_METRICS);
-        setMissions(MISSIONS);
-        setResearchState(DEFAULT_RESEARCH_STATE);
-        setActiveMissionId(null);
-        setIsSidebarCollapsed(false);
-        setView(AppView.TERMINAL);
-        setIsInitializing(false);
-        return;
+      if (saved?.view) {
+        setView(saved.view === AppView.SPEED_LABS ? AppView.DASHBOARD : saved.view);
+      } 
+    
+      if (saved?.researchState) {
+  setResearchState(saved.researchState);
       }
 
       try {
